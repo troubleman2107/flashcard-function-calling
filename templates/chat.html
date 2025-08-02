@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vocabulary Chat Assistant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+  <style>
+    body {
+      background-color: #f4f6f8;
+      padding: 0;
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    
+
+    .navbar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin-top: 60px;
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 0;
+    }
+
+    .chat-options {
+      padding: 1rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .option-card {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .option-card:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+      transform: translateY(-2px);
+    }
+
+    .option-card.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+
+    .option-icon {
+      font-size: 2rem;
+      min-width: 50px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      max-height: calc(100vh - 300px);
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 18px;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-left: auto;
+    }
+
+    .message.bot .message-bubble {
+      background: #f1f3f5;
+      color: #333;
+      border: 1px solid #e9ecef;
+    }
+
+    .message-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      min-width: 35px;
+    }
+
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .message.bot .message-avatar {
+      background: #e9ecef;
+      color: #6c757d;
+    }
+
+    .chat-input {
+      padding: 1rem;
+      background: white;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .input-section {
+      display: none;
+    }
+
+    .input-section.active {
+      display: block;
+    }
+
+    .chat-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-form input,
+    .chat-form textarea {
+      border-radius: 25px;
+      border: 2px solid #e9ecef;
+      padding: 0.75rem 1rem;
+    }
+
+    .chat-form input:focus,
+    .chat-form textarea:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .chat-form button {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 0.5rem 1rem;
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .stats-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-size: 0.9rem;
+    }
+
+    .vocabulary-result {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      font-family: inherit;
+    }
+
+    .vocabulary-content {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .word-header {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .word-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #667eea;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .phonetic {
+      font-size: 1rem;
+      color: #6c757d;
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+
+    .word-meta {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pos-tag {
+      background: #f8f9fa;
+      color: #495057;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .difficulty-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .difficulty-beginner {
+      background: #28a745;
+    }
+
+    .difficulty-intermediate {
+      background: #ffc107;
+      color: #212529;
+    }
+
+    .difficulty-advanced {
+      background: #dc3545;
+    }
+
+    .section-title {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .meaning-section, .examples-section, .synonyms-section {
+      margin-bottom: 1rem;
+    }
+
+    .meaning {
+      background: #f8f9fa;
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .examples-list {
+      margin: 0;
+      padding-left: 1rem;
+    }
+
+    .examples-list li {
+      margin-bottom: 0.3rem;
+      color: #495057;
+      font-size: 0.85rem;
+    }
+
+    .synonyms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+
+    .synonym-tag {
+      background: #e9ecef;
+      color: #495057;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .mnemonic-section {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 6px;
+      padding: 0.6rem;
+    }
+
+    .mnemonic {
+      color: #856404;
+      font-style: italic;
+      margin: 0;
+      font-size: 0.85rem;
+    }
+
+    .vocabulary-list {
+      margin-top: 0.5rem;
+    }
+
+    .vocabulary-item {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vocabulary-item h6 {
+      margin: 0 0 0.5rem 0;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .option-card {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .option-icon {
+        min-width: auto;
+      }
+
+      .message-bubble {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-journal-bookmark"></i> FlashCard
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/">
+          <i class="bi bi-cards"></i> Thẻ học
+        </a>
+        <a class="nav-link" href="/list">
+          <i class="bi bi-list-ul"></i> Danh sách
+        </a>
+        <a class="nav-link active" href="/chat">
+          <i class="bi bi-chat-dots"></i> Chat
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h4><i class="bi bi-robot"></i> Vocabulary Assistant</h4>
+      <p class="mb-0">
+        Trợ lý học từ vựng thông minh
+        <span class="stats-badge ms-2">
+          <i class="bi bi-collection"></i> {{ total_words }} từ đã học
+        </span>
+      </p>
+    </div>
+
+    <div class="chat-options">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="option-card" onclick="selectOption('word')">
+            <div class="option-icon">
+              <i class="bi bi-plus-circle"></i>
+            </div>
+            <div>
+              <h5 class="mb-1">Thêm từ mới</h5>
+              <small class="text-muted">Phân tích và thêm một từ vựng vào flashcard</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="option-card" onclick="selectOption('text')">
+            <div class="option-icon">
+              <i class="bi bi-file-text"></i>
+            </div>
+            <div>
+              <h5 class="mb-1">Phân tích văn bản</h5>
+              <small class="text-muted">Trích xuất từ vựng từ một đoạn văn bản</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="message bot">
+        <div class="message-avatar">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-bubble">
+          Xin chào! 👋 Tôi là trợ lý học từ vựng của bạn. Hãy chọn một trong hai tùy chọn phía trên để bắt đầu:
+          <br><br>
+          📚 <strong>Thêm từ mới:</strong> Nhập một từ tiếng Anh để tôi phân tích và thêm vào flashcard
+          <br>
+          📄 <strong>Phân tích văn bản:</strong> Dán một đoạn văn bản để tôi trích xuất từ vựng quan trọng
+        </div>
+      </div>
+    </div>
+
+    <div class="typing-indicator" id="typing-indicator">
+      <i class="bi bi-three-dots"></i> Đang xử lý...
+    </div>
+
+    <div class="chat-input">
+      <div class="input-section" id="word-input">
+        <form class="chat-form" onsubmit="sendMessage('word', event)">
+          <input type="text" class="form-control" placeholder="Nhập từ tiếng Anh..." required>
+          <button type="submit">
+            <i class="bi bi-send"></i>
+          </button>
+        </form>
+      </div>
+
+      <div class="input-section" id="text-input">
+        <form class="chat-form" onsubmit="sendMessage('text', event)">
+          <textarea class="form-control" rows="3" placeholder="Dán đoạn văn bản tiếng Anh..." required></textarea>
+          <button type="submit">
+            <i class="bi bi-send"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let selectedOption = null;
+
+    function createVocabularyHtml(data) {
+      let html = '<div class="vocabulary-content">';
+      
+      // Word header
+      html += '<div class="word-header">';
+      html += `<h3 class="word-title">${data.word.toUpperCase()}</h3>`;
+      
+      if (data.phonetic) {
+        html += `<div class="phonetic">/${data.phonetic}/</div>`;
+      }
+      
+      html += '<div class="word-meta">';
+      if (data.part_of_speech) {
+        html += `<span class="pos-tag">${data.part_of_speech}</span>`;
+      }
+      if (data.difficulty_level) {
+        const emoji = data.difficulty_level === 'beginner' ? '🟢' : 
+                     data.difficulty_level === 'intermediate' ? '🟡' : '🔴';
+        html += `<span class="difficulty-badge difficulty-${data.difficulty_level}">${emoji} ${data.difficulty_level.charAt(0).toUpperCase() + data.difficulty_level.slice(1)}</span>`;
+      }
+      html += '</div></div>';
+      
+      // Meaning section
+      if (data.vietnamese_meaning) {
+        html += '<div class="meaning-section">';
+        html += '<div class="section-title">🇻🇳 Nghĩa</div>';
+        html += `<div class="meaning">${data.vietnamese_meaning}</div>`;
+        html += '</div>';
+      }
+      
+      // Examples section
+      if (data.example_sentences && data.example_sentences.length > 0) {
+        html += '<div class="examples-section">';
+        html += '<div class="section-title">📝 Ví dụ</div>';
+        html += '<ol class="examples-list">';
+        data.example_sentences.forEach(sentence => {
+          html += `<li>${sentence}</li>`;
+        });
+        html += '</ol></div>';
+      }
+      
+      // Synonyms section
+      if (data.synonyms && data.synonyms.length > 0) {
+        html += '<div class="synonyms-section">';
+        html += '<div class="section-title">🔄 Từ đồng nghĩa</div>';
+        html += '<div class="synonyms">';
+        data.synonyms.forEach(synonym => {
+          html += `<span class="synonym-tag">${synonym}</span>`;
+        });
+        html += '</div></div>';
+      }
+      
+      // Mnemonic section
+      if (data.mnemonic_tip) {
+        html += '<div class="mnemonic-section">';
+        html += '<div class="section-title">💡 Mẹo học dễ nhớ</div>';
+        html += `<div class="mnemonic">${data.mnemonic_tip}</div>`;
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+
+    function selectOption(option) {
+      // Remove active class from all option cards
+      document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('active');
+      });
+
+      // Add active class to selected card
+      event.currentTarget.classList.add('active');
+
+      // Hide all input sections
+      document.querySelectorAll('.input-section').forEach(section => {
+        section.classList.remove('active');
+      });
+
+      // Show selected input section
+      document.getElementById(option + '-input').classList.add('active');
+
+      selectedOption = option;
+
+      // Add a message to chat
+      addMessage('user', option === 'word' ? 
+        '📚 Tôi muốn thêm một từ mới' : 
+        '📄 Tôi muốn phân tích văn bản'
+      );
+
+      addMessage('bot', option === 'word' ? 
+        'Tuyệt vời! Hãy nhập từ tiếng Anh mà bạn muốn học:' : 
+        'Tuyệt vời! Hãy dán đoạn văn bản tiếng Anh mà bạn muốn phân tích:'
+      );
+    }
+
+    function addMessage(sender, content, isHtml = false) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.innerHTML = sender === 'user' ? '<i class="bi bi-person"></i>' : '<i class="bi bi-robot"></i>';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      
+      if (isHtml) {
+        bubble.innerHTML = content;
+      } else {
+        bubble.textContent = content;
+      }
+
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(bubble);
+      messagesContainer.appendChild(messageDiv);
+
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function showTyping() {
+      document.getElementById('typing-indicator').style.display = 'block';
+      const messagesContainer = document.getElementById('chat-messages');
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTyping() {
+      document.getElementById('typing-indicator').style.display = 'none';
+    }
+
+    async function sendMessage(type, event) {
+      event.preventDefault();
+      
+      const form = event.target;
+      const input = form.querySelector('input, textarea');
+      const message = input.value.trim();
+      
+      if (!message) return;
+
+      // Add user message
+      addMessage('user', message);
+      
+      // Clear input
+      input.value = '';
+      
+      // Show typing indicator
+      showTyping();
+      
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message,
+            type: type
+          })
+        });
+        
+        const data = await response.json();
+        hideTyping();
+        
+        if (data.success) {
+          // Add success message
+          addMessage('bot', data.message);
+          
+          if (data.type === 'word' && data.result) {
+            // Show vocabulary result using structured data if available
+            if (data.structured_data) {
+              const resultHtml = createVocabularyHtml(data.structured_data);
+              addMessage('bot', `<div class="vocabulary-result">${resultHtml}</div>`, true);
+            } else {
+              const resultHtml = `<div class="vocabulary-result">${data.result}</div>`;
+              addMessage('bot', resultHtml, true);
+            }
+          } else if (data.type === 'text' && data.results) {
+            // Show vocabulary list
+            let listHtml = '<div class="vocabulary-list">';
+            data.results.forEach(vocab => {
+              if (vocab.structured) {
+                listHtml += `
+                  <div class="vocabulary-item">
+                    <h6>${vocab.word}</h6>
+                    <div class="vocabulary-content">${createVocabularyHtml(vocab.structured)}</div>
+                  </div>
+                `;
+              } else {
+                listHtml += `
+                  <div class="vocabulary-item">
+                    <h6>${vocab.word}</h6>
+                    <div style="font-size: 0.9rem; white-space: pre-wrap;">${vocab.formatted}</div>
+                  </div>
+                `;
+              }
+            });
+            listHtml += '</div>';
+            addMessage('bot', listHtml, true);
+          }
+          
+          // Add follow-up message
+          setTimeout(() => {
+            addMessage('bot', '✨ Bạn có muốn thêm từ vựng khác không? Hãy chọn một tùy chọn phía trên để tiếp tục!');
+          }, 1000);
+          
+        } else {
+          addMessage('bot', data.message);
+        }
+        
+      } catch (error) {
+        hideTyping();
+        addMessage('bot', '❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!');
+      }
+    }
+
+    // Auto-focus input when option is selected
+    document.addEventListener('DOMContentLoaded', function() {
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const target = mutation.target;
+            if (target.classList.contains('active') && target.classList.contains('input-section')) {
+              const input = target.querySelector('input, textarea');
+              if (input) {
+                setTimeout(() => input.focus(), 100);
+              }
+            }
+          }
+        });
+      });
+
+      document.querySelectorAll('.input-section').forEach(section => {
+        observer.observe(section, { attributes: true });
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        // Clear selection
+        document.querySelectorAll('.option-card').forEach(card => {
+          card.classList.remove('active');
+        });
+        document.querySelectorAll('.input-section').forEach(section => {
+          section.classList.remove('active');
+        });
+        selectedOption = null;
+      }
+    });
+  </script>
+</body>
+
+</html>
