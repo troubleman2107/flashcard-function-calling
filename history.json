@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "word": "computer",
+    "result": {
+      "formatted": "📚 **COMPUTER** //kəmˈpjuː.tər// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** máy tính\n\n📝 **Ví dụ:**\n1. I need to buy a new computer for my studies.\n2. Computers have changed the way we work and communicate.\n\n🔄 **Từ đồng nghĩa:** PC, laptop, desktop\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'computer' as a 'counting machine' that processes data for you.",
+      "structured": {
+        "word": "computer",
+        "vietnamese_meaning": "máy tính",
+        "part_of_speech": "noun",
+        "phonetic": "/kəmˈpjuː.tər/",
+        "example_sentences": [
+          "I need to buy a new computer for my studies.",
+          "Computers have changed the way we work and communicate."
+        ],
+        "mnemonic_tip": "Think of a 'computer' as a 'counting machine' that processes data for you.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "PC",
+          "laptop",
+          "desktop"
+        ]
+      },
+      "audio_path": "/static/audio/computer_df53ca26.wav",
+      "audio_text": "computer. máy tính.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "travel",
+    "result": {
+      "formatted": "📚 **TRAVEL** //ˈtræv.əl// (verb) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** du lịch\n\n📝 **Ví dụ:**\n1. I love to travel to new countries every summer.\n2. Traveling by train can be a relaxing way to see the countryside.\n\n🔄 **Từ đồng nghĩa:** journey, voyage, trip\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'travel' as two 'v's in 'move' and 'journey'.",
+      "structured": {
+        "word": "travel",
+        "vietnamese_meaning": "du lịch",
+        "part_of_speech": "verb",
+        "phonetic": "/ˈtræv.əl/",
+        "example_sentences": [
+          "I love to travel to new countries every summer.",
+          "Traveling by train can be a relaxing way to see the countryside."
+        ],
+        "mnemonic_tip": "Think of 'travel' as two 'v's in 'move' and 'journey'.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "journey",
+          "voyage",
+          "trip"
+        ]
+      },
+      "audio_path": "/static/audio/travel_69266c67.wav",
+      "audio_text": "travel. du lịch.",
+      "category": "Travel"
+    }
+  }
+]

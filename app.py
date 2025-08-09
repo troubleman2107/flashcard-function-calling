@@ -17,6 +17,8 @@ import soundfile as sf
 import time
 import hashlib
 from dotenv import load_dotenv
+import chromadb
+from chromadb.config import Settings
 
 load_dotenv()
 
@@ -36,8 +38,8 @@ class TTSService:
         """Initialize TTS models lazily"""
         try:
             print("Loading TTS models...")
-            self.model = VitsModel.from_pretrained("facebook/mms-tts-vie")
-            self.tokenizer = AutoTokenizer.from_pretrained("facebook/mms-tts-vie")
+            self.model = VitsModel.from_pretrained("facebook/mms-tts-eng")
+            self.tokenizer = AutoTokenizer.from_pretrained("facebook/mms-tts-eng")
             print("TTS models loaded successfully!")
         except Exception as e:
             print(f"Error loading TTS models: {e}")
@@ -52,7 +54,7 @@ class TTSService:
 
         try:
             # Create text for TTS (English word + Vietnamese meaning)
-            tts_text = f"{word}. {vietnamese_meaning}."
+            tts_text = f"{word}"
 
             # Generate unique filename based on content hash
             content_hash = hashlib.md5(tts_text.encode()).hexdigest()[:8]
@@ -83,6 +85,212 @@ class TTSService:
 
 # Initialize TTS service
 tts_service = TTSService()
+
+
+# Vocabulary Management with ChromaDB
+class VocabularyManager:
+    def __init__(self, persist_directory="./chroma_db"):
+        self.client = chromadb.PersistentClient(path=persist_directory)
+        self.collection = self.client.get_or_create_collection(
+            name="vocabulary",
+            metadata={"hnsw:space": "cosine"}
+        )
+        
+    def classify_category(self, word, vietnamese_meaning, part_of_speech, example_sentences):
+        """Phân loại category cho từ vựng dựa trên AI"""
+        try:
+            # Tạo context để phân loại
+            context = f"Word: {word}\nMeaning: {vietnamese_meaning}\nPart of speech: {part_of_speech}\nExamples: {' '.join(example_sentences)}"
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a vocabulary categorization expert. "
+                        "Classify the given English word into ONE of these categories: "
+                        "Business, Technology, Education, Health, Travel, Food, Sports, "
+                        "Entertainment, Science, Art, Nature, Family, Emotions, Time, "
+                        "Colors, Numbers, Animals, Transportation, Clothing, Weather. "
+                        "Return ONLY the category name, nothing else."
+                    ),
+                },
+                {"role": "user", "content": f"Classify this word: {context}"},
+            ]
+
+            response = client.chat.completions.create(
+                model="GPT-4o-mini",
+                messages=messages,
+                max_tokens=20,
+                temperature=0.1,
+            )
+            
+            category = response.choices[0].message.content.strip()
+            return category
+            
+        except Exception as e:
+            print(f"Error classifying category: {e}")
+            return "General"
+    
+    def add_vocabulary(self, word_data):
+        """Thêm từ vựng vào ChromaDB với category tự động"""
+        try:
+            word = word_data.get("word", "")
+            vietnamese_meaning = word_data.get("vietnamese_meaning", "")
+            part_of_speech = word_data.get("part_of_speech", "")
+            example_sentences = word_data.get("example_sentences", [])
+            
+            # Phân loại category tự động
+            category = self.classify_category(word, vietnamese_meaning, part_of_speech, example_sentences)
+            
+            # Tạo document text để embedding
+            document_text = f"{word} {vietnamese_meaning} {part_of_speech} {' '.join(example_sentences)}"
+            
+            # Tạo metadata
+            metadata = {
+                "word": word,
+                "vietnamese_meaning": vietnamese_meaning,
+                "part_of_speech": part_of_speech,
+                "category": category,
+                "difficulty_level": word_data.get("difficulty_level", "intermediate"),
+                "phonetic": word_data.get("phonetic", ""),
+                "synonyms": ",".join(word_data.get("synonyms", [])),
+                "mnemonic_tip": word_data.get("mnemonic_tip", ""),
+                "example_sentences": "|".join(example_sentences)
+            }
+            
+            # Thêm vào collection
+            self.collection.add(
+                documents=[document_text],
+                metadatas=[metadata],
+                ids=[f"word_{word.lower()}_{int(time.time())}"]
+            )
+            
+            print(f"Added word '{word}' to category '{category}'")
+            return category
+            
+        except Exception as e:
+            print(f"Error adding vocabulary to ChromaDB: {e}")
+            return None
+    
+    # def search_by_topic(self, topic, limit=10, similarity_threshold=0.5):
+    #     """Tìm kiếm từ vựng theo chủ đề - ĐÃ XÓA"""
+    #     return []
+    
+    def search_by_category(self, category, limit=50):
+        """Tìm kiếm từ vựng theo category cụ thể"""
+        try:
+            # Lấy tất cả dữ liệu
+            all_data = self.collection.get(include=["metadatas"])
+            results = []
+            
+            if all_data["metadatas"]:
+                for metadata in all_data["metadatas"]:
+                    if metadata.get("category", "General").lower() == category.lower():
+                        results.append({
+                            "word": metadata["word"],
+                            "vietnamese_meaning": metadata["vietnamese_meaning"],
+                            "category": metadata["category"],
+                            "part_of_speech": metadata["part_of_speech"],
+                            "example_sentences": metadata["example_sentences"].split("|"),
+                            "mnemonic_tip": metadata["mnemonic_tip"],
+                            "phonetic": metadata["phonetic"],
+                            "synonyms": metadata["synonyms"].split(",") if metadata["synonyms"] else [],
+                            "difficulty_level": metadata.get("difficulty_level", "intermediate")
+                        })
+                        
+                        if len(results) >= limit:
+                            break
+            
+            return results
+            
+        except Exception as e:
+            print(f"Error searching by category: {e}")
+            return []
+    
+    def delete_vocabulary(self, word):
+        """Xóa từ vựng khỏi ChromaDB"""
+        try:
+            # Lấy tất cả dữ liệu để tìm IDs của từ cần xóa
+            all_data = self.collection.get(include=["metadatas"])
+            ids_to_delete = []
+            
+            if all_data["metadatas"]:
+                for i, metadata in enumerate(all_data["metadatas"]):
+                    if metadata.get("word", "").lower() == word.lower():
+                        # Lấy ID tương ứng
+                        if i < len(all_data["ids"]):
+                            ids_to_delete.append(all_data["ids"][i])
+            
+            # Xóa các IDs tìm được
+            if ids_to_delete:
+                self.collection.delete(ids=ids_to_delete)
+                print(f"Deleted {len(ids_to_delete)} entries for word '{word}' from ChromaDB")
+                return len(ids_to_delete)
+            else:
+                print(f"Word '{word}' not found in ChromaDB")
+                return 0
+                
+        except Exception as e:
+            print(f"Error deleting vocabulary from ChromaDB: {e}")
+            return 0
+    
+    def word_exists(self, word):
+        """Kiểm tra xem từ vựng đã tồn tại trong ChromaDB chưa"""
+        try:
+            # Lấy tất cả metadata
+            all_data = self.collection.get(include=["metadatas"])
+            
+            if all_data["metadatas"]:
+                for metadata in all_data["metadatas"]:
+                    if metadata.get("word", "").lower() == word.lower():
+                        return True
+            return False
+                
+        except Exception as e:
+            print(f"Error checking word existence: {e}")
+            return False
+    
+    def clear_all_data(self):
+        """Xóa toàn bộ dữ liệu trong ChromaDB"""
+        try:
+            # Lấy tất cả IDs
+            all_data = self.collection.get(include=["metadatas"])
+            
+            if all_data["ids"]:
+                # Xóa tất cả
+                self.collection.delete(ids=all_data["ids"])
+                deleted_count = len(all_data["ids"])
+                print(f"Deleted {deleted_count} entries from ChromaDB")
+                return deleted_count
+            else:
+                print("No data found in ChromaDB to delete")
+                return 0
+                
+        except Exception as e:
+            print(f"Error clearing ChromaDB: {e}")
+            return 0
+    
+    def get_categories_stats(self):
+        """Lấy thống kê các category"""
+        try:
+            # Lấy tất cả metadata
+            all_data = self.collection.get(include=["metadatas"])
+            categories = {}
+            
+            if all_data["metadatas"]:
+                for metadata in all_data["metadatas"]:
+                    category = metadata.get("category", "General")
+                    categories[category] = categories.get(category, 0) + 1
+            
+            return categories
+            
+        except Exception as e:
+            print(f"Error getting categories stats: {e}")
+            return {}
+
+
+# Initialize Vocabulary Manager
+vocab_manager = VocabularyManager()
 
 # Khởi tạo OpenAI client
 client = openai.OpenAI(
@@ -222,8 +430,16 @@ TEXT_ANALYSIS_FUNCTION = {
 }
 
 
-# Enhanced save_to_history function with audio
+# Enhanced save_to_history function with audio and ChromaDB (with duplicate prevention)
 def save_to_history(word, result):
+    # Kiểm tra duplicate trước khi lưu
+    chromadb_exists = vocab_manager.word_exists(word)
+    history_exists = word_exists_in_history(word)
+    
+    if chromadb_exists and history_exists:
+        print(f"Word '{word}' already exists in both ChromaDB and history. Skipping...")
+        return False
+    
     history_data = []
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -239,11 +455,29 @@ def save_to_history(word, result):
         if audio_path:
             result["audio_path"] = audio_path
             result["audio_text"] = f"{word}. {vietnamese_meaning}."
+        
+        # Thêm vào ChromaDB với phân loại tự động (chỉ khi chưa tồn tại)
+        if not chromadb_exists:
+            try:
+                category = vocab_manager.add_vocabulary(result["structured"])
+                if category:
+                    result["category"] = category
+                    print(f"Word '{word}' classified into category: {category}")
+            except Exception as e:
+                print(f"Error adding to ChromaDB: {e}")
+        else:
+            print(f"Word '{word}' already exists in ChromaDB. Skipping ChromaDB insertion...")
 
-    history_data.append({"word": word, "result": result})
-
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history_data, f, ensure_ascii=False, indent=2)
+    # Thêm vào history.json (chỉ khi chưa tồn tại)
+    if not history_exists:
+        history_data.append({"word": word, "result": result})
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history_data, f, ensure_ascii=False, indent=2)
+        print(f"Word '{word}' added to history.json")
+    else:
+        print(f"Word '{word}' already exists in history.json. Skipping history insertion...")
+    
+    return True
 
 
 def get_history():
@@ -257,11 +491,67 @@ def get_history():
     return history
 
 
+def word_exists_in_history(word):
+    """Kiểm tra xem từ vựng đã tồn tại trong history.json chưa"""
+    history = get_history()
+    for item in history:
+        if item.get("word", "").lower() == word.lower():
+            return True
+    return False
+
+
+def clear_all_data():
+    """Xóa toàn bộ dữ liệu từ ChromaDB và history.json"""
+    try:
+        # Xóa ChromaDB
+        chromadb_deleted = vocab_manager.clear_all_data()
+        
+        # Xóa history.json
+        history_deleted = 0
+        if os.path.exists(HISTORY_FILE):
+            history_data = get_history()
+            history_deleted = len(history_data)
+            
+            # Xóa tất cả file audio
+            for item in history_data:
+                if "result" in item and "audio_path" in item["result"]:
+                    audio_path = item["result"]["audio_path"]
+                    file_path = audio_path.replace("/static/", "static/")
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                            print(f"Deleted audio file: {file_path}")
+                        except Exception as e:
+                            print(f"Error deleting audio file: {e}")
+            
+            # Xóa history.json
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+        
+        print(f"Cleared all data: {chromadb_deleted} from ChromaDB, {history_deleted} from history")
+        return chromadb_deleted, history_deleted
+        
+    except Exception as e:
+        print(f"Error clearing all data: {e}")
+        return 0, 0
+
+
 def delete_flashcard(index):
     history_data = get_history()
     if 0 <= index < len(history_data):
-        # Delete associated audio file if it exists
+        # Get the word to delete
         deleted_item = history_data[index]
+        word_to_delete = deleted_item.get("word", "")
+        
+        # Delete from ChromaDB first
+        if word_to_delete:
+            try:
+                deleted_count = vocab_manager.delete_vocabulary(word_to_delete)
+                print(f"Deleted {deleted_count} entries for '{word_to_delete}' from ChromaDB")
+            except Exception as e:
+                print(f"Error deleting from ChromaDB: {e}")
+        
+        # Delete associated audio file if it exists
         if "result" in deleted_item and "audio_path" in deleted_item["result"]:
             audio_path = deleted_item["result"]["audio_path"]
             # Convert web path to file path
@@ -273,6 +563,7 @@ def delete_flashcard(index):
                 except Exception as e:
                     print(f"Error deleting audio file: {e}")
 
+        # Delete from history.json
         del history_data[index]
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history_data, f, ensure_ascii=False, indent=2)
@@ -460,17 +751,45 @@ def chat_api():
         if chat_type == "word":
             result_data = explain_word(message)
             if result_data["structured"]:
-                save_to_history(message, result_data)
-                return jsonify(
-                    {
-                        "success": True,
-                        "message": f"✅ Đã thêm từ '{message}' vào flashcard!",
-                        "result": result_data["formatted"],
-                        "structured_data": result_data["structured"],
-                        "audio_path": result_data.get("audio_path"),
-                        "type": "word",
-                    }
-                )
+                # Kiểm tra duplicate trước khi lưu
+                chromadb_exists = vocab_manager.word_exists(message)
+                history_exists = word_exists_in_history(message)
+                
+                if chromadb_exists and history_exists:
+                    return jsonify(
+                        {
+                            "success": False,
+                            "message": f"⚠️ Từ '{message}' đã tồn tại trong flashcard!",
+                            "result": result_data["formatted"],
+                            "structured_data": result_data["structured"],
+                            "type": "word",
+                            "duplicate": True
+                        }
+                    )
+                
+                saved = save_to_history(message, result_data)
+                if saved:
+                    return jsonify(
+                        {
+                            "success": True,
+                            "message": f"✅ Đã thêm từ '{message}' vào flashcard!",
+                            "result": result_data["formatted"],
+                            "structured_data": result_data["structured"],
+                            "audio_path": result_data.get("audio_path"),
+                            "type": "word",
+                        }
+                    )
+                else:
+                    return jsonify(
+                        {
+                            "success": False,
+                            "message": f"⚠️ Từ '{message}' đã tồn tại trong flashcard!",
+                            "result": result_data["formatted"],
+                            "structured_data": result_data["structured"],
+                            "type": "word",
+                            "duplicate": True
+                        }
+                    )
             else:
                 return jsonify(
                     {
@@ -528,6 +847,74 @@ def delete_flashcard_route(index):
     return redirect(url_for("flashcard_list"))
 
 
+@app.route("/api/delete-word", methods=["POST"])
+def delete_word_api():
+    """API xóa từ vựng theo tên từ"""
+    try:
+        data = request.get_json()
+        word = data.get("word", "").strip()
+        
+        if not word:
+            return jsonify({"success": False, "message": "Vui lòng cung cấp tên từ cần xóa"})
+        
+        # Xóa từ ChromaDB
+        deleted_count = vocab_manager.delete_vocabulary(word)
+        
+        # Xóa từ history.json
+        history_data = get_history()
+        original_count = len(history_data)
+        history_data = [item for item in history_data if item.get("word", "").lower() != word.lower()]
+        
+        if len(history_data) < original_count:
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(history_data, f, ensure_ascii=False, indent=2)
+        
+        if deleted_count > 0 or len(history_data) < original_count:
+            return jsonify({
+                "success": True,
+                "message": f"Đã xóa từ '{word}' thành công",
+                "deleted_from_chromadb": deleted_count,
+                "deleted_from_history": original_count - len(history_data)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": f"Không tìm thấy từ '{word}' để xóa"
+            })
+            
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Lỗi xóa từ vựng: {str(e)}"})
+
+
+@app.route("/api/clear-all-data", methods=["POST"])
+def clear_all_data_api():
+    """API xóa toàn bộ dữ liệu từ ChromaDB và history.json"""
+    try:
+        # Xác nhận từ client
+        data = request.get_json()
+        confirm = data.get("confirm", False)
+        
+        if not confirm:
+            return jsonify({
+                "success": False, 
+                "message": "Vui lòng xác nhận bằng cách gửi 'confirm': true"
+            })
+        
+        # Thực hiện xóa
+        chromadb_deleted, history_deleted = clear_all_data()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Đã xóa toàn bộ dữ liệu thành công",
+            "deleted_from_chromadb": chromadb_deleted,
+            "deleted_from_history": history_deleted,
+            "total_deleted": chromadb_deleted + history_deleted
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Lỗi xóa toàn bộ dữ liệu: {str(e)}"})
+
+
 @app.route("/api/word/<word>")
 def get_word_api(word):
     """API endpoint để lấy thông tin từ dưới dạng JSON"""
@@ -538,6 +925,65 @@ def get_word_api(word):
         "structured_data": result_data["structured"],
         "audio_path": result_data.get("audio_path"),
     }
+
+
+# @app.route("/api/search-topic", methods=["POST"])
+# def search_by_topic_api():
+#     """API tìm kiếm từ vựng theo chủ đề - ĐÃ XÓA"""
+#     return jsonify({"success": False, "message": "Tính năng tìm kiếm thông minh đã bị xóa"})
+
+
+@app.route("/api/search-category", methods=["POST"])
+def search_by_category_api():
+    """API tìm kiếm từ vựng theo category"""
+    try:
+        data = request.get_json()
+        category = data.get("category", "").strip()
+        limit = data.get("limit", 50)
+        
+        if not category:
+            return jsonify({"success": False, "message": "Vui lòng chọn category"})
+        
+        # Tìm kiếm trong ChromaDB theo category
+        results = vocab_manager.search_by_category(category, limit=limit)
+        
+        if results:
+            return jsonify({
+                "success": True,
+                "category": category,
+                "results": results,
+                "count": len(results),
+                "message": f"Tìm thấy {len(results)} từ vựng trong category '{category}'"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": f"Không tìm thấy từ vựng nào trong category '{category}'"
+            })
+            
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Lỗi tìm kiếm: {str(e)}"})
+
+
+@app.route("/api/categories")
+def get_categories_api():
+    """API lấy thống kê các category"""
+    try:
+        categories = vocab_manager.get_categories_stats()
+        return jsonify({
+            "success": True,
+            "categories": categories,
+            "total_words": sum(categories.values())
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Lỗi lấy thống kê: {str(e)}"})
+
+
+@app.route("/search")
+def search_page():
+    """Trang tìm kiếm theo chủ đề"""
+    categories = vocab_manager.get_categories_stats()
+    return render_template("search.html", categories=categories)
 
 
 @app.route("/api/generate-audio/<word>")
@@ -595,4 +1041,4 @@ def serve_audio(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=6969)

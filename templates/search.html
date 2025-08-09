@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm theo chủ đề - Flashcard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 2rem;
+            padding: 2rem;
+        }
+
+        .category-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .word-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .word-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .similarity-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .search-input {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .search-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 1rem 2rem;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .nav-link:hover {
+            color: #f8f9fa !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Flashcard App
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a>
+                <a class="nav-link" href="/chat"><i class="fas fa-comments me-1"></i>Chat</a>
+                <a class="nav-link" href="/list"><i class="fas fa-list me-1"></i>Danh sách</a>
+                <a class="nav-link active" href="/search"><i class="fas fa-search me-1"></i>Tìm kiếm</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="search-container">
+            <div class="text-center mb-4">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-tags me-3"></i>
+                    Tìm kiếm theo danh mục
+                </h1>
+                <p class="lead text-muted">Tìm kiếm tất cả từ vựng trong danh mục cụ thể</p>
+            </div>
+
+            <!-- Search Form -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control search-input"
+                            placeholder="Nhập tên danh mục (ví dụ: Technology, Travel, Food...)">
+                        <button class="btn search-btn" type="button" onclick="performSearch()">
+                            <i class="fas fa-search me-2"></i>Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Stats -->
+            {% if categories %}
+            <div class="mb-4">
+                <h5 class="text-center mb-3">
+                    <i class="fas fa-tags me-2"></i>
+                    Các danh mục có sẵn ({{ categories|length }} categories)
+                </h5>
+                <div class="text-center">
+                    {% for category, count in categories.items() %}
+                    <button class="btn category-badge" onclick="selectCategory('{{ category }}')">
+                        {{ category }} ({{ count }})
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Loading -->
+            <div class="text-center loading" id="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tìm kiếm...</span>
+                </div>
+                <p class="mt-2">Đang tìm kiếm từ vựng...</p>
+            </div>
+
+            <!-- Search Results -->
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search function (only category search)
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+
+            if (!query) {
+                alert('Vui lòng nhập tên danh mục');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/search-category', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ category: query, limit: 50 })
+                });
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                displayError('Đã xảy ra lỗi khi tìm kiếm');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Legacy function for backward compatibility
+        function searchByTopic() {
+            performSearch();
+        }
+
+        // Select category function
+        function selectCategory(category) {
+            document.getElementById('searchInput').value = category;
+            performSearch();
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Display search results
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (data.success && data.results && data.results.length > 0) {
+                let html = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        ${data.message}
+                    </div>
+                `;
+
+                data.results.forEach(word => {
+                    html += `
+                        <div class="word-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h4 class="text-primary mb-1">
+                                        <i class="fas fa-book me-2"></i>
+                                        ${word.word.toUpperCase()}
+                                        ${word.phonetic ? `<small class="text-muted">/${word.phonetic}/</small>` : ''}
+                                    </h4>
+                                    <span class="badge bg-secondary me-2">${word.part_of_speech}</span>
+                                    <span class="badge bg-info me-2">${word.category}</span>
+                                    ${word.difficulty_level ? `<span class="badge bg-warning me-2">${word.difficulty_level}</span>` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong class="text-success">
+                                    <i class="fas fa-language me-1"></i>
+                                    Nghĩa:
+                                </strong>
+                                ${word.vietnamese_meaning}
+                            </div>
+
+                            ${word.example_sentences && word.example_sentences.length > 0 ? `
+                                <div class="mb-3">
+                                    <strong class="text-info">
+                                        <i class="fas fa-quote-left me-1"></i>
+                                        Ví dụ:
+                                    </strong>
+                                    <ul class="mt-2">
+                                        ${word.example_sentences.map(sentence => `<li>${sentence}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+
+                            ${word.synonyms && word.synonyms.length > 0 && word.synonyms[0] ? `
+                                <div class="mb-3">
+                                    <strong class="text-warning">
+                                        <i class="fas fa-sync-alt me-1"></i>
+                                        Từ đồng nghĩa:
+                                    </strong>
+                                    ${word.synonyms.join(', ')}
+                                </div>
+                            ` : ''}
+
+                            ${word.mnemonic_tip ? `
+                                <div class="alert alert-light">
+                                    <strong>
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        Mẹo học:
+                                    </strong>
+                                    ${word.mnemonic_tip}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                resultsDiv.innerHTML = html;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message || 'Không tìm thấy kết quả nào'}
+                    </div>
+                `;
+            }
+        }
+
+        // Display error
+        function displayError(message) {
+            document.getElementById('searchResults').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-times-circle me-2"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Enter key support
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+
+</html>
