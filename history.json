@@ -128,5 +128,1019 @@
       "audio_text": "journey. cuộc hành trình.",
       "category": "Travel"
     }
+  },
+  {
+    "word": "economic",
+    "result": {
+      "formatted": "📚 **ECONOMIC** //ˌiː.kəˈnɒm.ɪk// (adjective) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** kinh tế\n\n📝 **Ví dụ:**\n1. The economic situation in the country is improving after several years of recession.\n2. Many people are concerned about the economic impact of the new policy.\n\n🔄 **Từ đồng nghĩa:** financial, monetary, commercial\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'economy' to remember that 'economic' relates to money and resources.",
+      "structured": {
+        "word": "economic",
+        "vietnamese_meaning": "kinh tế",
+        "part_of_speech": "adjective",
+        "phonetic": "/ˌiː.kəˈnɒm.ɪk/",
+        "example_sentences": [
+          "The economic situation in the country is improving after several years of recession.",
+          "Many people are concerned about the economic impact of the new policy."
+        ],
+        "mnemonic_tip": "Think of 'economy' to remember that 'economic' relates to money and resources.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "financial",
+          "monetary",
+          "commercial"
+        ]
+      },
+      "audio_path": "/static/audio/economic_d5cc7a8d.wav",
+      "audio_text": "economic. kinh tế.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "vacation",
+    "result": {
+      "formatted": "📚 **VACATION** //vəˈkeɪʃən// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** kỳ nghỉ\n\n📝 **Ví dụ:**\n1. I am planning a vacation to the beach next month.\n2. During our vacation, we visited several national parks.\n\n🔄 **Từ đồng nghĩa:** holiday, break, respite\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'vacation' as 'a vacated space' where you can relax and enjoy time away from work.",
+      "structured": {
+        "word": "vacation",
+        "vietnamese_meaning": "kỳ nghỉ",
+        "part_of_speech": "noun",
+        "phonetic": "/vəˈkeɪʃən/",
+        "example_sentences": [
+          "I am planning a vacation to the beach next month.",
+          "During our vacation, we visited several national parks."
+        ],
+        "mnemonic_tip": "Think of 'vacation' as 'a vacated space' where you can relax and enjoy time away from work.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "holiday",
+          "break",
+          "respite"
+        ]
+      },
+      "audio_path": "/static/audio/vacation_ee8ded58.wav",
+      "audio_text": "vacation. kỳ nghỉ.",
+      "category": "Travel"
+    }
+  },
+  {
+    "word": "hotel",
+    "result": {
+      "formatted": "📚 **HOTEL** //hoʊˈtɛl// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** khách sạn\n\n📝 **Ví dụ:**\n1. We decided to stay at a luxurious hotel during our vacation.\n2. The hotel offers free breakfast and Wi-Fi for all its guests.\n\n🔄 **Từ đồng nghĩa:** inn, motel, lodging\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'ho' that 'tel' you where to stay when traveling.",
+      "structured": {
+        "word": "hotel",
+        "vietnamese_meaning": "khách sạn",
+        "part_of_speech": "noun",
+        "phonetic": "/hoʊˈtɛl/",
+        "example_sentences": [
+          "We decided to stay at a luxurious hotel during our vacation.",
+          "The hotel offers free breakfast and Wi-Fi for all its guests."
+        ],
+        "mnemonic_tip": "Think of a 'ho' that 'tel' you where to stay when traveling.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "inn",
+          "motel",
+          "lodging"
+        ]
+      },
+      "audio_path": "/static/audio/hotel_e919c49d.wav",
+      "audio_text": "hotel. khách sạn.",
+      "category": "Travel"
+    }
+  },
+  {
+    "word": "passport",
+    "result": {
+      "formatted": "📚 **PASSPORT** //ˈpæspɔːrt// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** hộ chiếu\n\n📝 **Ví dụ:**\n1. I need to renew my passport before my trip to Europe.\n2. She showed her passport to the immigration officer at the airport.\n\n🔄 **Từ đồng nghĩa:** travel document, identity document, visa\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'pass' (to go) + 'port' (to a place) – it's a document that allows you to pass through borders.",
+      "structured": {
+        "word": "passport",
+        "vietnamese_meaning": "hộ chiếu",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈpæspɔːrt/",
+        "example_sentences": [
+          "I need to renew my passport before my trip to Europe.",
+          "She showed her passport to the immigration officer at the airport."
+        ],
+        "mnemonic_tip": "Think of 'pass' (to go) + 'port' (to a place) – it's a document that allows you to pass through borders.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "travel document",
+          "identity document",
+          "visa"
+        ]
+      },
+      "audio_path": "/static/audio/passport_d056025f.wav",
+      "audio_text": "passport. hộ chiếu.",
+      "category": "Travel"
+    }
+  },
+  {
+    "word": "luggage",
+    "result": {
+      "formatted": "📚 **LUGGAGE** /ˈlʌɡɪdʒ/ (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** hành lý\n\n📝 **Ví dụ:**\n1. She packed her luggage carefully for the trip.\n2. The airport lost my luggage during the flight.\n\n🔄 **Từ đồng nghĩa:** baggage, suitcases, travel gear\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'luggage' as 'lugg' (to carry) your bags when you go on a trip.",
+      "structured": {
+        "word": "luggage",
+        "vietnamese_meaning": "hành lý",
+        "part_of_speech": "noun",
+        "phonetic": "ˈlʌɡɪdʒ",
+        "example_sentences": [
+          "She packed her luggage carefully for the trip.",
+          "The airport lost my luggage during the flight."
+        ],
+        "mnemonic_tip": "Think of 'luggage' as 'lugg' (to carry) your bags when you go on a trip.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "baggage",
+          "suitcases",
+          "travel gear"
+        ]
+      },
+      "audio_path": "/static/audio/luggage_df30aaa3.wav",
+      "audio_text": "luggage. hành lý.",
+      "category": "Travel"
+    }
+  },
+  {
+    "word": "destination",
+    "result": {
+      "formatted": "📚 **DESTINATION** /ˌdɛstəˈneɪʃən/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** điểm đến\n\n📝 **Ví dụ:**\n1. Her ultimate destination is Paris, where she hopes to study art.\n2. The travel agency provided a brochure detailing the destination's attractions.\n\n🔄 **Từ đồng nghĩa:** place, location, goal\n\n💡 **Mẹo học dễ nhớ:**\nRemember 'destination' by thinking of 'destiny' where you are meant to go.",
+      "structured": {
+        "word": "destination",
+        "vietnamese_meaning": "điểm đến",
+        "part_of_speech": "noun",
+        "phonetic": "ˌdɛstəˈneɪʃən",
+        "example_sentences": [
+          "Her ultimate destination is Paris, where she hopes to study art.",
+          "The travel agency provided a brochure detailing the destination's attractions."
+        ],
+        "mnemonic_tip": "Remember 'destination' by thinking of 'destiny' where you are meant to go.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "place",
+          "location",
+          "goal"
+        ]
+      },
+      "audio_path": "/static/audio/destination_6990a543.wav",
+      "audio_text": "destination. điểm đến.",
+      "category": "Travel"
+    }
+  },
+  {
+    "word": "software",
+    "result": {
+      "formatted": "📚 **SOFTWARE** //ˈsɑːf.twer// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** phần mềm\n\n📝 **Ví dụ:**\n1. The software on my computer needs to be updated regularly to ensure security.\n2. Many schools now use educational software to enhance learning.\n\n🔄 **Từ đồng nghĩa:** program, application, system\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'software' as the 'soft' part of a computer, which is different from 'hardware' that you can touch.",
+      "structured": {
+        "word": "software",
+        "vietnamese_meaning": "phần mềm",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈsɑːf.twer/",
+        "example_sentences": [
+          "The software on my computer needs to be updated regularly to ensure security.",
+          "Many schools now use educational software to enhance learning."
+        ],
+        "mnemonic_tip": "Think of 'software' as the 'soft' part of a computer, which is different from 'hardware' that you can touch.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "program",
+          "application",
+          "system"
+        ]
+      },
+      "audio_path": "/static/audio/software_f9fa10ba.wav",
+      "audio_text": "software. phần mềm.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "internet",
+    "result": {
+      "formatted": "📚 **INTERNET** //'ɪntənet// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** mạng internet\n\n📝 **Ví dụ:**\n1. I use the internet to find information for my research.\n2. The internet has changed the way we communicate with each other.\n\n🔄 **Từ đồng nghĩa:** web, net, cyberspace\n\n💡 **Mẹo học dễ nhớ:**\nThink of the 'inter' in 'internet' as connecting to 'interconnected' networks.",
+      "structured": {
+        "word": "internet",
+        "vietnamese_meaning": "mạng internet",
+        "part_of_speech": "noun",
+        "phonetic": "/'ɪntənet/",
+        "example_sentences": [
+          "I use the internet to find information for my research.",
+          "The internet has changed the way we communicate with each other."
+        ],
+        "mnemonic_tip": "Think of the 'inter' in 'internet' as connecting to 'interconnected' networks.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "web",
+          "net",
+          "cyberspace"
+        ]
+      },
+      "audio_path": "/static/audio/internet_c3581516.wav",
+      "audio_text": "internet. mạng internet.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "smartphone",
+    "result": {
+      "formatted": "📚 **SMARTPHONE** //ˈsmɑːrtfoʊn// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** điện thoại thông minh\n\n📝 **Ví dụ:**\n1. I use my smartphone to check emails and social media.\n2. Smartphones have become an essential part of modern life.\n\n🔄 **Từ đồng nghĩa:** mobile phone, cell phone, cellular device\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'smart' as an intelligent device that connects you to the world.",
+      "structured": {
+        "word": "smartphone",
+        "vietnamese_meaning": "điện thoại thông minh",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈsmɑːrtfoʊn/",
+        "example_sentences": [
+          "I use my smartphone to check emails and social media.",
+          "Smartphones have become an essential part of modern life."
+        ],
+        "mnemonic_tip": "Think of 'smart' as an intelligent device that connects you to the world.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "mobile phone",
+          "cell phone",
+          "cellular device"
+        ]
+      },
+      "audio_path": "/static/audio/smartphone_1036ba3c.wav",
+      "audio_text": "smartphone. điện thoại thông minh.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "database",
+    "result": {
+      "formatted": "📚 **DATABASE** /ˈdeɪtəˌbeɪs/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** cơ sở dữ liệu\n\n📝 **Ví dụ:**\n1. The company uses a database to store customer information.\n2. She retrieved the data from the database for her research.\n\n🔄 **Từ đồng nghĩa:** data bank, repository, record store\n\n💡 **Mẹo học dễ nhớ:**\nThink of a database as a 'data-base' where information is stored like a big warehouse.",
+      "structured": {
+        "word": "database",
+        "vietnamese_meaning": "cơ sở dữ liệu",
+        "part_of_speech": "noun",
+        "phonetic": "ˈdeɪtəˌbeɪs",
+        "example_sentences": [
+          "The company uses a database to store customer information.",
+          "She retrieved the data from the database for her research."
+        ],
+        "mnemonic_tip": "Think of a database as a 'data-base' where information is stored like a big warehouse.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "data bank",
+          "repository",
+          "record store"
+        ]
+      },
+      "audio_path": "/static/audio/database_11e0eed8.wav",
+      "audio_text": "database. cơ sở dữ liệu.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "algorithm",
+    "result": {
+      "formatted": "📚 **ALGORITHM** /ˈæl.ɡə.rɪ.ðəm/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** thuật toán\n\n📝 **Ví dụ:**\n1. An algorithm is a step-by-step procedure for solving a problem.\n2. Understanding algorithms is essential for computer programming.\n\n🔄 **Từ đồng nghĩa:** procedure, formula, method\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'algorithm' as 'all good rhythms' for solving problems in a structured way.",
+      "structured": {
+        "word": "algorithm",
+        "vietnamese_meaning": "thuật toán",
+        "part_of_speech": "noun",
+        "phonetic": "ˈæl.ɡə.rɪ.ðəm",
+        "example_sentences": [
+          "An algorithm is a step-by-step procedure for solving a problem.",
+          "Understanding algorithms is essential for computer programming."
+        ],
+        "mnemonic_tip": "Think of 'algorithm' as 'all good rhythms' for solving problems in a structured way.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "procedure",
+          "formula",
+          "method"
+        ]
+      },
+      "audio_path": "/static/audio/algorithm_ed469618.wav",
+      "audio_text": "algorithm. thuật toán.",
+      "category": "Technology"
+    }
+  },
+  {
+    "word": "restaurant",
+    "result": {
+      "formatted": "📚 **RESTAURANT** //ˈrɛstərɒnt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** nhà hàng\n\n📝 **Ví dụ:**\n1. We decided to go to a new restaurant for dinner tonight.\n2. The restaurant was famous for its delicious desserts.\n\n🔄 **Từ đồng nghĩa:** eatery, bistro, diner\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'rest' in 'restaurant' as a place to take a break and enjoy a meal.",
+      "structured": {
+        "word": "restaurant",
+        "vietnamese_meaning": "nhà hàng",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈrɛstərɒnt/",
+        "example_sentences": [
+          "We decided to go to a new restaurant for dinner tonight.",
+          "The restaurant was famous for its delicious desserts."
+        ],
+        "mnemonic_tip": "Think of 'rest' in 'restaurant' as a place to take a break and enjoy a meal.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "eatery",
+          "bistro",
+          "diner"
+        ]
+      },
+      "audio_path": "/static/audio/restaurant_6d4b6296.wav",
+      "audio_text": "restaurant. nhà hàng.",
+      "category": "Food"
+    }
+  },
+  {
+    "word": "delicious",
+    "result": {
+      "formatted": "📚 **DELICIOUS** //dɪˈlɪʃ.əs// (adjective) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** ngon\n\n📝 **Ví dụ:**\n1. The cake was so delicious that everyone asked for a second piece.\n2. She cooked a delicious meal for her friends last night.\n\n🔄 **Từ đồng nghĩa:** tasty, flavorful, scrumptious\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'de-licious' as 'de-lightful' food that you want to eat.",
+      "structured": {
+        "word": "delicious",
+        "vietnamese_meaning": "ngon",
+        "part_of_speech": "adjective",
+        "phonetic": "/dɪˈlɪʃ.əs/",
+        "example_sentences": [
+          "The cake was so delicious that everyone asked for a second piece.",
+          "She cooked a delicious meal for her friends last night."
+        ],
+        "mnemonic_tip": "Think of 'de-licious' as 'de-lightful' food that you want to eat.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "tasty",
+          "flavorful",
+          "scrumptious"
+        ]
+      },
+      "audio_path": "/static/audio/delicious_d9f4b96f.wav",
+      "audio_text": "delicious. ngon.",
+      "category": "Food"
+    }
+  },
+  {
+    "word": "recipe",
+    "result": {
+      "formatted": "📚 **RECIPE** //ˈrɛsɪpi// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** công thức chế biến món ăn\n\n📝 **Ví dụ:**\n1. I followed a family recipe to make the pie.\n2. The recipe calls for three cups of flour.\n\n🔄 **Từ đồng nghĩa:** formula, instruction, method\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'recipe' as 'recipe for success' in cooking!",
+      "structured": {
+        "word": "recipe",
+        "vietnamese_meaning": "công thức chế biến món ăn",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈrɛsɪpi/",
+        "example_sentences": [
+          "I followed a family recipe to make the pie.",
+          "The recipe calls for three cups of flour."
+        ],
+        "mnemonic_tip": "Think of 'recipe' as 'recipe for success' in cooking!",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "formula",
+          "instruction",
+          "method"
+        ]
+      },
+      "audio_path": "/static/audio/recipe_ae18fe4e.wav",
+      "audio_text": "recipe. công thức chế biến món ăn.",
+      "category": "Food"
+    }
+  },
+  {
+    "word": "ingredient",
+    "result": {
+      "formatted": "📚 **INGREDIENT** //ɪnˈɡriːdiənt// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** thành phần\n\n📝 **Ví dụ:**\n1. The main ingredient in this recipe is chicken.\n2. Make sure to add all the ingredients before mixing.\n\n🔄 **Từ đồng nghĩa:** component, element, constituent\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'in' and 'gredient' as 'in a recipe' where each 'ingredient' is needed for the dish.",
+      "structured": {
+        "word": "ingredient",
+        "vietnamese_meaning": "thành phần",
+        "part_of_speech": "noun",
+        "phonetic": "/ɪnˈɡriːdiənt/",
+        "example_sentences": [
+          "The main ingredient in this recipe is chicken.",
+          "Make sure to add all the ingredients before mixing."
+        ],
+        "mnemonic_tip": "Think of 'in' and 'gredient' as 'in a recipe' where each 'ingredient' is needed for the dish.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "component",
+          "element",
+          "constituent"
+        ]
+      },
+      "audio_path": "/static/audio/ingredient_1a1ecbaa.wav",
+      "audio_text": "ingredient. thành phần.",
+      "category": "Food"
+    }
+  },
+  {
+    "word": "nutrition",
+    "result": {
+      "formatted": "📚 **NUTRITION** //njuːˈtrɪʃ.ən// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** dinh dưỡng\n\n📝 **Ví dụ:**\n1. Good nutrition is essential for a healthy life.\n2. She studied nutrition to help people improve their diets.\n\n🔄 **Từ đồng nghĩa:** nourishment, food, sustenance\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'nutrition' as the 'nourishment' your body needs to function well.",
+      "structured": {
+        "word": "nutrition",
+        "vietnamese_meaning": "dinh dưỡng",
+        "part_of_speech": "noun",
+        "phonetic": "/njuːˈtrɪʃ.ən/",
+        "example_sentences": [
+          "Good nutrition is essential for a healthy life.",
+          "She studied nutrition to help people improve their diets."
+        ],
+        "mnemonic_tip": "Think of 'nutrition' as the 'nourishment' your body needs to function well.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "nourishment",
+          "food",
+          "sustenance"
+        ]
+      },
+      "audio_path": "/static/audio/nutrition_0595a756.wav",
+      "audio_text": "nutrition. dinh dưỡng.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "meeting",
+    "result": {
+      "formatted": "📚 **MEETING** //ˈmiːtɪŋ// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** cuộc họp\n\n📝 **Ví dụ:**\n1. We have a meeting scheduled for 10 AM tomorrow.\n2. The meeting was very productive and resulted in several decisions.\n\n🔄 **Từ đồng nghĩa:** gathering, conference, assembly\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'meeting' as a 'gathering' of minds to 'meet' and discuss.",
+      "structured": {
+        "word": "meeting",
+        "vietnamese_meaning": "cuộc họp",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈmiːtɪŋ/",
+        "example_sentences": [
+          "We have a meeting scheduled for 10 AM tomorrow.",
+          "The meeting was very productive and resulted in several decisions."
+        ],
+        "mnemonic_tip": "Think of a 'meeting' as a 'gathering' of minds to 'meet' and discuss.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "gathering",
+          "conference",
+          "assembly"
+        ]
+      },
+      "audio_path": "/static/audio/meeting_d4878816.wav",
+      "audio_text": "meeting. cuộc họp.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "profit",
+    "result": {
+      "formatted": "📚 **PROFIT** //ˈprɒf.ɪt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** lợi nhuận\n\n📝 **Ví dụ:**\n1. The company's profit increased significantly last year.\n2. She made a profit by selling her handmade crafts online.\n\n🔄 **Từ đồng nghĩa:** gain, earnings, benefit\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'profit' as the 'pro' (positive) aspect of business, where you gain more than what you put in.",
+      "structured": {
+        "word": "profit",
+        "vietnamese_meaning": "lợi nhuận",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈprɒf.ɪt/",
+        "example_sentences": [
+          "The company's profit increased significantly last year.",
+          "She made a profit by selling her handmade crafts online."
+        ],
+        "mnemonic_tip": "Think of 'profit' as the 'pro' (positive) aspect of business, where you gain more than what you put in.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "gain",
+          "earnings",
+          "benefit"
+        ]
+      },
+      "audio_path": "/static/audio/profit_8cb55412.wav",
+      "audio_text": "profit. lợi nhuận.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "customer",
+    "result": {
+      "formatted": "📚 **CUSTOMER** //ˈkʌs.tə.mər// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** khách hàng\n\n📝 **Ví dụ:**\n1. The customer requested a refund due to a defective product.\n2. As a business owner, it's important to understand the needs of your customers.\n\n🔄 **Từ đồng nghĩa:** client, buyer, consumer\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'customer' as someone who 'comes to' a store to buy something.",
+      "structured": {
+        "word": "customer",
+        "vietnamese_meaning": "khách hàng",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈkʌs.tə.mər/",
+        "example_sentences": [
+          "The customer requested a refund due to a defective product.",
+          "As a business owner, it's important to understand the needs of your customers."
+        ],
+        "mnemonic_tip": "Think of a 'customer' as someone who 'comes to' a store to buy something.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "client",
+          "buyer",
+          "consumer"
+        ]
+      },
+      "audio_path": "/static/audio/customer_91ec1f93.wav",
+      "audio_text": "customer. khách hàng.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "marketing",
+    "result": {
+      "formatted": "📚 **MARKETING** /ˈmɑːrkɪtɪŋ/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** tiếp thị\n\n📝 **Ví dụ:**\n1. The company is investing heavily in marketing to reach new customers.\n2. Effective marketing strategies can significantly boost sales.\n\n🔄 **Từ đồng nghĩa:** advertising, promotion, merchandising\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'marketing' as 'making art' in selling products.",
+      "structured": {
+        "word": "marketing",
+        "vietnamese_meaning": "tiếp thị",
+        "part_of_speech": "noun",
+        "phonetic": "ˈmɑːrkɪtɪŋ",
+        "example_sentences": [
+          "The company is investing heavily in marketing to reach new customers.",
+          "Effective marketing strategies can significantly boost sales."
+        ],
+        "mnemonic_tip": "Think of 'marketing' as 'making art' in selling products.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "advertising",
+          "promotion",
+          "merchandising"
+        ]
+      },
+      "audio_path": "/static/audio/marketing_c769c2bd.wav",
+      "audio_text": "marketing. tiếp thị.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "investment",
+    "result": {
+      "formatted": "📚 **INVESTMENT** //ɪnˈvɛstmənt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** sự đầu tư\n\n📝 **Ví dụ:**\n1. She made a significant investment in the stock market last year.\n2. His investment in education has paid off with a successful career.\n\n🔄 **Từ đồng nghĩa:** expenditure, contribution, outlay\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'investing' as 'in vesting'; you're putting money in something to get something back, like dressing up in a 'vest' to show your intention to grow financially.",
+      "structured": {
+        "word": "investment",
+        "vietnamese_meaning": "sự đầu tư",
+        "part_of_speech": "noun",
+        "phonetic": "/ɪnˈvɛstmənt/",
+        "example_sentences": [
+          "She made a significant investment in the stock market last year.",
+          "His investment in education has paid off with a successful career."
+        ],
+        "mnemonic_tip": "Think of 'investing' as 'in vesting'; you're putting money in something to get something back, like dressing up in a 'vest' to show your intention to grow financially.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "expenditure",
+          "contribution",
+          "outlay"
+        ]
+      },
+      "audio_path": "/static/audio/investment_254bb13e.wav",
+      "audio_text": "investment. sự đầu tư.",
+      "category": "Business"
+    }
+  },
+  {
+    "word": "exercise",
+    "result": {
+      "formatted": "📚 **EXERCISE** //ˈɛksərsaɪz// (noun, verb) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** thực hành, tập luyện\n\n📝 **Ví dụ:**\n1. Regular exercise is important for maintaining good health.\n2. She decided to exercise every morning before work.\n\n🔄 **Từ đồng nghĩa:** workout, training, activity\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'ex' as 'out' and 'ercise' as 'work': you work out to stay fit!",
+      "structured": {
+        "word": "exercise",
+        "vietnamese_meaning": "thực hành, tập luyện",
+        "part_of_speech": "noun, verb",
+        "phonetic": "/ˈɛksərsaɪz/",
+        "example_sentences": [
+          "Regular exercise is important for maintaining good health.",
+          "She decided to exercise every morning before work."
+        ],
+        "mnemonic_tip": "Think of 'ex' as 'out' and 'ercise' as 'work': you work out to stay fit!",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "workout",
+          "training",
+          "activity"
+        ]
+      },
+      "audio_path": "/static/audio/exercise_97e96b9b.wav",
+      "audio_text": "exercise. thực hành, tập luyện.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "medicine",
+    "result": {
+      "formatted": "📚 **MEDICINE** /ˈmɛdɪsɪn/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** thuốc, y học\n\n📝 **Ví dụ:**\n1. She takes medicine every day to control her allergies.\n2. The doctor studied medicine for many years.\n\n🔄 **Từ đồng nghĩa:** drugs, medication, treatment\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'medicine' as 'med'(ical) 'cine' (cinema) - where medical dramas are shown!",
+      "structured": {
+        "word": "medicine",
+        "vietnamese_meaning": "thuốc, y học",
+        "part_of_speech": "noun",
+        "phonetic": "ˈmɛdɪsɪn",
+        "example_sentences": [
+          "She takes medicine every day to control her allergies.",
+          "The doctor studied medicine for many years."
+        ],
+        "mnemonic_tip": "Think of 'medicine' as 'med'(ical) 'cine' (cinema) - where medical dramas are shown!",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "drugs",
+          "medication",
+          "treatment"
+        ]
+      },
+      "audio_path": "/static/audio/medicine_d9e5d212.wav",
+      "audio_text": "medicine. thuốc, y học.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "hospital",
+    "result": {
+      "formatted": "📚 **HOSPITAL** //ˈhɒspɪtəl// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** bệnh viện\n\n📝 **Ví dụ:**\n1. She was taken to the hospital after her accident.\n2. The hospital provides excellent care for patients.\n\n🔄 **Từ đồng nghĩa:** medical center, clinic, infirmary\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'hospital' as a place where 'ho's' get 'spital' (spital sounds like 'special') treatment when they are sick.",
+      "structured": {
+        "word": "hospital",
+        "vietnamese_meaning": "bệnh viện",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈhɒspɪtəl/",
+        "example_sentences": [
+          "She was taken to the hospital after her accident.",
+          "The hospital provides excellent care for patients."
+        ],
+        "mnemonic_tip": "Think of 'hospital' as a place where 'ho's' get 'spital' (spital sounds like 'special') treatment when they are sick.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "medical center",
+          "clinic",
+          "infirmary"
+        ]
+      },
+      "audio_path": "/static/audio/hospital_8b42a1c9.wav",
+      "audio_text": "hospital. bệnh viện.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "doctor",
+    "result": {
+      "formatted": "📚 **DOCTOR** //ˈdɑːktər// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** bác sĩ\n\n📝 **Ví dụ:**\n1. She wants to become a doctor when she grows up.\n2. The doctor gave him some medicine for his cold.\n\n🔄 **Từ đồng nghĩa:** physician, medic, surgeon\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'doc' who 'tors' (helps) people with their health.",
+      "structured": {
+        "word": "doctor",
+        "vietnamese_meaning": "bác sĩ",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈdɑːktər/",
+        "example_sentences": [
+          "She wants to become a doctor when she grows up.",
+          "The doctor gave him some medicine for his cold."
+        ],
+        "mnemonic_tip": "Think of a 'doc' who 'tors' (helps) people with their health.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "physician",
+          "medic",
+          "surgeon"
+        ]
+      },
+      "audio_path": "/static/audio/doctor_f9f16d97.wav",
+      "audio_text": "doctor. bác sĩ.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "healthy",
+    "result": {
+      "formatted": "📚 **HEALTHY** //ˈhɛl.θi// (adjective) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** khỏe mạnh, lành mạnh\n\n📝 **Ví dụ:**\n1. Eating vegetables is a healthy choice.\n2. She leads a healthy lifestyle by exercising regularly.\n\n🔄 **Từ đồng nghĩa:** fit, wholesome, beneficial\n\n💡 **Mẹo học dễ nhớ:**\nRemember that 'healthy' has 'health' in it, which is what it describes.",
+      "structured": {
+        "word": "healthy",
+        "vietnamese_meaning": "khỏe mạnh, lành mạnh",
+        "part_of_speech": "adjective",
+        "phonetic": "/ˈhɛl.θi/",
+        "example_sentences": [
+          "Eating vegetables is a healthy choice.",
+          "She leads a healthy lifestyle by exercising regularly."
+        ],
+        "mnemonic_tip": "Remember that 'healthy' has 'health' in it, which is what it describes.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "fit",
+          "wholesome",
+          "beneficial"
+        ]
+      },
+      "audio_path": "/static/audio/healthy_741839f3.wav",
+      "audio_text": "healthy. khỏe mạnh, lành mạnh.",
+      "category": "Health"
+    }
+  },
+  {
+    "word": "student",
+    "result": {
+      "formatted": "📚 **STUDENT** //ˈstjuː.dənt// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** học sinh, sinh viên\n\n📝 **Ví dụ:**\n1. The student studied hard for the exam.\n2. Every student has the right to quality education.\n\n🔄 **Từ đồng nghĩa:** pupil, learner, scholar\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'study' crew who are 'ent'ers in the learning world.",
+      "structured": {
+        "word": "student",
+        "vietnamese_meaning": "học sinh, sinh viên",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈstjuː.dənt/",
+        "example_sentences": [
+          "The student studied hard for the exam.",
+          "Every student has the right to quality education."
+        ],
+        "mnemonic_tip": "Think of a 'study' crew who are 'ent'ers in the learning world.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "pupil",
+          "learner",
+          "scholar"
+        ]
+      },
+      "audio_path": "/static/audio/student_cd735028.wav",
+      "audio_text": "student. học sinh, sinh viên.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "teacher",
+    "result": {
+      "formatted": "📚 **TEACHER** //ˈtiː.tʃər// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** giáo viên\n\n📝 **Ví dụ:**\n1. She has been a teacher for over ten years.\n2. The teacher explained the lesson clearly.\n\n🔄 **Từ đồng nghĩa:** instructor, educator, tutor\n\n💡 **Mẹo học dễ nhớ:**\nThink of a teacher as someone who 'teaches' and imparts knowledge.",
+      "structured": {
+        "word": "teacher",
+        "vietnamese_meaning": "giáo viên",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈtiː.tʃər/",
+        "example_sentences": [
+          "She has been a teacher for over ten years.",
+          "The teacher explained the lesson clearly."
+        ],
+        "mnemonic_tip": "Think of a teacher as someone who 'teaches' and imparts knowledge.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "instructor",
+          "educator",
+          "tutor"
+        ]
+      },
+      "audio_path": "/static/audio/teacher_8d788385.wav",
+      "audio_text": "teacher. giáo viên.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "university",
+    "result": {
+      "formatted": "📚 **UNIVERSITY** //juːnɪˈvɜːrsɪti// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** trường đại học\n\n📝 **Ví dụ:**\n1. She decided to apply to several universities for her higher education.\n2. The university offers a variety of programs and degrees.\n\n🔄 **Từ đồng nghĩa:** college, educational institution, academy\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'universe' plus 'city' - a city of learning in the universe.",
+      "structured": {
+        "word": "university",
+        "vietnamese_meaning": "trường đại học",
+        "part_of_speech": "noun",
+        "phonetic": "/juːnɪˈvɜːrsɪti/",
+        "example_sentences": [
+          "She decided to apply to several universities for her higher education.",
+          "The university offers a variety of programs and degrees."
+        ],
+        "mnemonic_tip": "Think of 'universe' plus 'city' - a city of learning in the universe.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "college",
+          "educational institution",
+          "academy"
+        ]
+      },
+      "audio_path": "/static/audio/university_10238d61.wav",
+      "audio_text": "university. trường đại học.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "knowledge",
+    "result": {
+      "formatted": "📚 **KNOWLEDGE** //ˈnɒlɪdʒ// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** kiến thức\n\n📝 **Ví dụ:**\n1. She has a deep knowledge of ancient history.\n2. Knowledge is power, as the saying goes.\n\n🔄 **Từ đồng nghĩa:** understanding, wisdom, insight\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'knowledge' as a treasure chest filled with valuable information.",
+      "structured": {
+        "word": "knowledge",
+        "vietnamese_meaning": "kiến thức",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈnɒlɪdʒ/",
+        "example_sentences": [
+          "She has a deep knowledge of ancient history.",
+          "Knowledge is power, as the saying goes."
+        ],
+        "mnemonic_tip": "Think of 'knowledge' as a treasure chest filled with valuable information.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "understanding",
+          "wisdom",
+          "insight"
+        ]
+      },
+      "audio_path": "/static/audio/knowledge_a542e9b7.wav",
+      "audio_text": "knowledge. kiến thức.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "learning",
+    "result": {
+      "formatted": "📚 **LEARNING** /ˈlɜːrnɪŋ/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** học tập\n\n📝 **Ví dụ:**\n1. Learning a new language can be challenging but rewarding.\n2. She is passionate about the learning process and shares her knowledge with others.\n\n🔄 **Từ đồng nghĩa:** education, study, knowledge\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'learning' as 'earn-ing' knowledge, like earning a reward for your efforts.",
+      "structured": {
+        "word": "learning",
+        "vietnamese_meaning": "học tập",
+        "part_of_speech": "noun",
+        "phonetic": "ˈlɜːrnɪŋ",
+        "example_sentences": [
+          "Learning a new language can be challenging but rewarding.",
+          "She is passionate about the learning process and shares her knowledge with others."
+        ],
+        "mnemonic_tip": "Think of 'learning' as 'earn-ing' knowledge, like earning a reward for your efforts.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "education",
+          "study",
+          "knowledge"
+        ]
+      },
+      "audio_path": "/static/audio/learning_25a9ac40.wav",
+      "audio_text": "learning. học tập.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "football",
+    "result": {
+      "formatted": "📚 **FOOTBALL** //ˈfʊt.bɔːl// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** bóng đá\n\n📝 **Ví dụ:**\n1. He plays football every Saturday with his friends.\n2. The football match ended in a tie.\n\n🔄 **Từ đồng nghĩa:** soccer, gridiron, football game\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'foot' + 'ball' – it’s a ball you kick with your feet!",
+      "structured": {
+        "word": "football",
+        "vietnamese_meaning": "bóng đá",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈfʊt.bɔːl/",
+        "example_sentences": [
+          "He plays football every Saturday with his friends.",
+          "The football match ended in a tie."
+        ],
+        "mnemonic_tip": "Think of 'foot' + 'ball' – it’s a ball you kick with your feet!",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "soccer",
+          "gridiron",
+          "football game"
+        ]
+      },
+      "audio_path": "/static/audio/football_37b4e2d8.wav",
+      "audio_text": "football. bóng đá.",
+      "category": "Sports"
+    }
+  },
+  {
+    "word": "training",
+    "result": {
+      "formatted": "📚 **TRAINING** /ˈtreɪnɪŋ/ (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** đào tạo\n\n📝 **Ví dụ:**\n1. She is attending a training session to improve her skills.\n2. The training program lasts for six weeks.\n\n🔄 **Từ đồng nghĩa:** education, coaching, instruction\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'training' as 'gaining' skills through practice.",
+      "structured": {
+        "word": "training",
+        "vietnamese_meaning": "đào tạo",
+        "part_of_speech": "noun",
+        "phonetic": "ˈtreɪnɪŋ",
+        "example_sentences": [
+          "She is attending a training session to improve her skills.",
+          "The training program lasts for six weeks."
+        ],
+        "mnemonic_tip": "Think of 'training' as 'gaining' skills through practice.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "education",
+          "coaching",
+          "instruction"
+        ]
+      },
+      "audio_path": "/static/audio/training_c185ddac.wav",
+      "audio_text": "training. đào tạo.",
+      "category": "Education"
+    }
+  },
+  {
+    "word": "competition",
+    "result": {
+      "formatted": "📚 **COMPETITION** //ˌkɒmpəˈtɪʃən// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** cuộc thi\n\n📝 **Ví dụ:**\n1. She won first place in the regional science competition.\n2. The competition among the companies has increased this year.\n\n🔄 **Từ đồng nghĩa:** contest, tournament, rivalry\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'compete' and remember that competition is what happens when people or teams compete against each other.",
+      "structured": {
+        "word": "competition",
+        "vietnamese_meaning": "cuộc thi",
+        "part_of_speech": "noun",
+        "phonetic": "/ˌkɒmpəˈtɪʃən/",
+        "example_sentences": [
+          "She won first place in the regional science competition.",
+          "The competition among the companies has increased this year."
+        ],
+        "mnemonic_tip": "Think of 'compete' and remember that competition is what happens when people or teams compete against each other.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "contest",
+          "tournament",
+          "rivalry"
+        ]
+      },
+      "audio_path": "/static/audio/competition_3190dbf1.wav",
+      "audio_text": "competition. cuộc thi.",
+      "category": "Sports"
+    }
+  },
+  {
+    "word": "athlete",
+    "result": {
+      "formatted": "📚 **ATHLETE** //ˈæθliːt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** vận động viên\n\n📝 **Ví dụ:**\n1. The athlete trained hard to prepare for the upcoming competition.\n2. She was a talented athlete who excelled in multiple sports.\n\n🔄 **Từ đồng nghĩa:** sportsman, player, competitor\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'athlete' as 'a-thlete' - 'a' for athletic and 'thlete' from 'athletic'.",
+      "structured": {
+        "word": "athlete",
+        "vietnamese_meaning": "vận động viên",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈæθliːt/",
+        "example_sentences": [
+          "The athlete trained hard to prepare for the upcoming competition.",
+          "She was a talented athlete who excelled in multiple sports."
+        ],
+        "mnemonic_tip": "Think of 'athlete' as 'a-thlete' - 'a' for athletic and 'thlete' from 'athletic'.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "sportsman",
+          "player",
+          "competitor"
+        ]
+      },
+      "audio_path": "/static/audio/athlete_610d8f7b.wav",
+      "audio_text": "athlete. vận động viên.",
+      "category": "Sports"
+    }
+  },
+  {
+    "word": "victory",
+    "result": {
+      "formatted": "📚 **VICTORY** //ˈvɪk.tər.i// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** chiến thắng\n\n📝 **Ví dụ:**\n1. The team's victory was celebrated by fans all over the city.\n2. After a long battle, the soldiers finally achieved victory over their enemies.\n\n🔄 **Từ đồng nghĩa:** triumph, win, success\n\n💡 **Mẹo học dễ nhớ:**\nRemember 'victory' as 'victorious' to associate it with winning.",
+      "structured": {
+        "word": "victory",
+        "vietnamese_meaning": "chiến thắng",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈvɪk.tər.i/",
+        "example_sentences": [
+          "The team's victory was celebrated by fans all over the city.",
+          "After a long battle, the soldiers finally achieved victory over their enemies."
+        ],
+        "mnemonic_tip": "Remember 'victory' as 'victorious' to associate it with winning.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "triumph",
+          "win",
+          "success"
+        ]
+      },
+      "audio_path": "/static/audio/victory_e4f1ee70.wav",
+      "audio_text": "victory. chiến thắng.",
+      "category": "Sports"
+    }
+  },
+  {
+    "word": "movie",
+    "result": {
+      "formatted": "📚 **MOVIE** //ˈmuːvi// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** phim\n\n📝 **Ví dụ:**\n1. I love watching a good movie on the weekend.\n2. The movie we saw last night was so exciting!\n\n🔄 **Từ đồng nghĩa:** film, motion picture, feature\n\n💡 **Mẹo học dễ nhớ:**\nThink of a 'move' in a 'movie' – it's all about action and motion!",
+      "structured": {
+        "word": "movie",
+        "vietnamese_meaning": "phim",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈmuːvi/",
+        "example_sentences": [
+          "I love watching a good movie on the weekend.",
+          "The movie we saw last night was so exciting!"
+        ],
+        "mnemonic_tip": "Think of a 'move' in a 'movie' – it's all about action and motion!",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "film",
+          "motion picture",
+          "feature"
+        ]
+      },
+      "audio_path": "/static/audio/movie_aed34b9f.wav",
+      "audio_text": "movie. phim.",
+      "category": "Entertainment"
+    }
+  },
+  {
+    "word": "music",
+    "result": {
+      "formatted": "📚 **MUSIC** //ˈmjuː.zɪk// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** âm nhạc\n\n📝 **Ví dụ:**\n1. She listens to music every day.\n2. The music at the concert was fantastic.\n\n🔄 **Từ đồng nghĩa:** melody, harmony, tune\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'music' as the 'melody' that moves you emotionally.",
+      "structured": {
+        "word": "music",
+        "vietnamese_meaning": "âm nhạc",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈmjuː.zɪk/",
+        "example_sentences": [
+          "She listens to music every day.",
+          "The music at the concert was fantastic."
+        ],
+        "mnemonic_tip": "Think of 'music' as the 'melody' that moves you emotionally.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "melody",
+          "harmony",
+          "tune"
+        ]
+      },
+      "audio_path": "/static/audio/music_18d67699.wav",
+      "audio_text": "music. âm nhạc.",
+      "category": "Entertainment"
+    }
+  },
+  {
+    "word": "concert",
+    "result": {
+      "formatted": "📚 **CONCERT** //ˈkɒn.sɜːt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** buổi hòa nhạc\n\n📝 **Ví dụ:**\n1. I went to a concert last night and it was amazing!\n2. The concert will feature several famous musicians.\n\n🔄 **Từ đồng nghĩa:** performance, show, gig\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'con' as in 'together' and 'cert' sounding like 'certain'; at a concert, we are together for a certain musical performance.",
+      "structured": {
+        "word": "concert",
+        "vietnamese_meaning": "buổi hòa nhạc",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈkɒn.sɜːt/",
+        "example_sentences": [
+          "I went to a concert last night and it was amazing!",
+          "The concert will feature several famous musicians."
+        ],
+        "mnemonic_tip": "Think of 'con' as in 'together' and 'cert' sounding like 'certain'; at a concert, we are together for a certain musical performance.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "performance",
+          "show",
+          "gig"
+        ]
+      },
+      "audio_path": "/static/audio/concert_0909553c.wav",
+      "audio_text": "concert. buổi hòa nhạc.",
+      "category": "Entertainment"
+    }
   }
 ]

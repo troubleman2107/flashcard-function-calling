@@ -1221,9 +1221,8 @@ def get_categories_api():
 
 @app.route("/search")
 def search_page():
-    """Trang tìm kiếm theo chủ đề"""
-    categories = vocab_manager.get_categories_stats()
-    return render_template("search.html", categories=categories)
+    """Trang tìm kiếm thông minh với semantic search"""
+    return render_template("search.html")
 
 
 @app.route("/api/generate-audio/<word>")
