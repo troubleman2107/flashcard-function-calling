@@ -177,7 +177,7 @@ class VocabularyManager:
     #     return []
     
     def search_by_category(self, category, limit=50):
-        """Tìm kiếm từ vựng theo category cụ thể"""
+        """Tìm kiếm từ vựng theo category cụ thể - DEPRECATED, sử dụng semantic_search thay thế"""
         try:
             # Lấy tất cả dữ liệu
             all_data = self.collection.get(include=["metadatas"])
@@ -206,6 +206,85 @@ class VocabularyManager:
         except Exception as e:
             print(f"Error searching by category: {e}")
             return []
+    
+    def semantic_search(self, query, limit=10, similarity_threshold=0.3):
+        """Tìm kiếm từ vựng bằng semantic search dựa trên vector embeddings"""
+        try:
+            # Tạo query text phong phú hơn để tìm kiếm semantic
+            enhanced_query = self._enhance_search_query(query)
+            
+            # Thực hiện semantic search với ChromaDB
+            results = self.collection.query(
+                query_texts=[enhanced_query],
+                n_results=limit,
+                include=["metadatas", "distances", "documents"]
+            )
+            
+            formatted_results = []
+            if results["metadatas"] and results["metadatas"][0]:
+                for i, metadata in enumerate(results["metadatas"][0]):
+                    # Kiểm tra similarity threshold
+                    distance = results["distances"][0][i] if results["distances"] else 0
+                    similarity = 1 - distance  # ChromaDB trả về distance, chuyển thành similarity
+                    
+                    if similarity >= similarity_threshold:
+                        formatted_results.append({
+                            "word": metadata["word"],
+                            "vietnamese_meaning": metadata["vietnamese_meaning"],
+                            "category": metadata["category"],
+                            "part_of_speech": metadata["part_of_speech"],
+                            "example_sentences": metadata["example_sentences"].split("|"),
+                            "mnemonic_tip": metadata["mnemonic_tip"],
+                            "phonetic": metadata["phonetic"],
+                            "synonyms": metadata["synonyms"].split(",") if metadata["synonyms"] else [],
+                            "difficulty_level": metadata.get("difficulty_level", "intermediate"),
+                            "similarity_score": round(similarity, 3)
+                        })
+            
+            # Sắp xếp theo similarity score giảm dần
+            formatted_results.sort(key=lambda x: x["similarity_score"], reverse=True)
+            
+            print(f"Semantic search for '{query}' found {len(formatted_results)} results")
+            return formatted_results
+            
+        except Exception as e:
+            print(f"Error in semantic search: {e}")
+            return []
+    
+    def _enhance_search_query(self, query):
+        """Tăng cường query để semantic search hiệu quả hơn"""
+        # Mapping các từ khóa tiếng Việt sang tiếng Anh và mở rộng ngữ cảnh
+        query_mappings = {
+            "du lịch": "travel vacation holiday trip journey tourism sightseeing adventure",
+            "công nghệ": "technology computer software programming internet digital tech innovation",
+            "ăn uống": "food eating drinking restaurant cooking meal cuisine nutrition",
+            "kinh doanh": "business work office company management finance economy",
+            "giáo dục": "education school learning study teaching knowledge academic",
+            "sức khỏe": "health medical doctor hospital medicine fitness wellness",
+            "thể thao": "sports exercise fitness game competition athletic physical",
+            "giải trí": "entertainment movie music fun leisure recreation hobby",
+            "khoa học": "science research experiment discovery scientific knowledge",
+            "nghệ thuật": "art creative painting drawing design artistic culture",
+            "thiên nhiên": "nature environment natural outdoor wildlife plants animals",
+            "gia đình": "family parents children relatives home domestic",
+            "cảm xúc": "emotions feelings mood happy sad angry love",
+            "thời gian": "time clock hour minute day week month year",
+            "màu sắc": "colors red blue green yellow black white colorful",
+            "số": "numbers counting mathematics numeric quantity amount",
+            "động vật": "animals pets wildlife creatures living beings",
+            "giao thông": "transportation vehicle car bus train plane travel",
+            "quần áo": "clothing clothes fashion wear dress shirt pants",
+            "thời tiết": "weather climate rain sun snow wind temperature"
+        }
+        
+        # Tìm mapping phù hợp
+        query_lower = query.lower()
+        for vietnamese_term, english_expansion in query_mappings.items():
+            if vietnamese_term in query_lower:
+                return f"{query} {english_expansion}"
+        
+        # Nếu không tìm thấy mapping, trả về query gốc với một số từ khóa chung
+        return f"{query} vocabulary words language learning"
     
     def delete_vocabulary(self, word):
         """Xóa từ vựng khỏi ChromaDB"""
@@ -429,6 +508,35 @@ TEXT_ANALYSIS_FUNCTION = {
     },
 }
 
+# Function tool for semantic vocabulary search
+SEMANTIC_VOCABULARY_SEARCH_FUNCTION = {
+    "type": "function",
+    "function": {
+        "name": "semantic_search_vocabulary",
+        "description": "Tìm kiếm từ vựng bằng semantic search dựa trên ý nghĩa và ngữ cảnh. Sử dụng khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm hoặc tình huống cụ thể.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Từ khóa hoặc mô tả chủ đề cần tìm kiếm. Có thể là tiếng Việt hoặc tiếng Anh. Ví dụ: 'du lịch', 'travel', 'công nghệ', 'technology', 'ăn uống', 'food', 'cảm xúc vui buồn', 'happy sad emotions'",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Số lượng từ vựng tối đa cần trả về (mặc định 10)",
+                    "default": 10
+                },
+                "similarity_threshold": {
+                    "type": "number",
+                    "description": "Ngưỡng độ tương đồng tối thiểu (0.0-1.0, mặc định 0.3)",
+                    "default": 0.3
+                }
+            },
+            "required": ["query"],
+        },
+    },
+}
+
 
 # Enhanced save_to_history function with audio and ChromaDB (with duplicate prevention)
 def save_to_history(word, result):
@@ -567,6 +675,53 @@ def delete_flashcard(index):
         del history_data[index]
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history_data, f, ensure_ascii=False, indent=2)
+
+
+def semantic_search_vocabulary_function(query, limit=10, similarity_threshold=0.3):
+    """Function để tìm kiếm từ vựng bằng semantic search cho function calling"""
+    try:
+        # Tìm kiếm bằng semantic search
+        results = vocab_manager.semantic_search(query, limit=limit, similarity_threshold=similarity_threshold)
+        
+        if not results:
+            return {
+                "success": False,
+                "message": f"Không tìm thấy từ vựng nào liên quan đến '{query}'",
+                "query": query,
+                "results": []
+            }
+        
+        # Format kết quả cho function calling
+        formatted_results = []
+        for word_data in results:
+            formatted_results.append({
+                "word": word_data["word"],
+                "vietnamese_meaning": word_data["vietnamese_meaning"],
+                "part_of_speech": word_data["part_of_speech"],
+                "phonetic": word_data["phonetic"],
+                "example_sentences": word_data["example_sentences"],
+                "mnemonic_tip": word_data["mnemonic_tip"],
+                "difficulty_level": word_data["difficulty_level"],
+                "synonyms": word_data["synonyms"],
+                "category": word_data["category"],
+                "similarity_score": word_data["similarity_score"]
+            })
+        
+        return {
+            "success": True,
+            "message": f"Tìm thấy {len(results)} từ vựng liên quan đến '{query}'",
+            "query": query,
+            "results": formatted_results,
+            "count": len(results)
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Lỗi tìm kiếm: {str(e)}",
+            "query": query,
+            "results": []
+        }
 
 
 def format_vocabulary_result(function_data):
@@ -825,6 +980,91 @@ def chat_api():
             return jsonify(
                 {"success": False, "message": "❌ Loại yêu cầu không hợp lệ"}
             )
+
+    except Exception as e:
+        return jsonify({"success": False, "message": f"❌ Đã xảy ra lỗi: {str(e)}"})
+
+
+@app.route("/api/semantic-search", methods=["POST"])
+def semantic_search_api():
+    """API xử lý tìm kiếm từ vựng bằng semantic search với function calling"""
+    data = request.get_json()
+    message = data.get("message", "").strip()
+
+    if not message:
+        return jsonify({"success": False, "message": "Vui lòng nhập nội dung tìm kiếm"})
+
+    try:
+        # Sử dụng AI để quyết định có cần tìm kiếm từ vựng không và trích xuất query
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "Bạn là một trợ lý học từ vựng tiếng Anh thông minh sử dụng semantic search. "
+                    "Khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm, tình huống, hoặc cảm xúc "
+                    "(ví dụ: 'các từ liên quan đến du lịch', 'từ vựng về công nghệ', 'từ về cảm xúc vui buồn', 'words about happiness'), "
+                    "hãy sử dụng function semantic_search_vocabulary để tìm kiếm trong cơ sở dữ liệu. "
+                    "Semantic search sẽ tìm từ vựng dựa trên ý nghĩa và ngữ cảnh, không chỉ khớp từ khóa. "
+                    "Nếu không phải câu hỏi về tìm kiếm từ vựng, hãy trả lời bình thường."
+                ),
+            },
+            {"role": "user", "content": message},
+        ]
+
+        response = client.chat.completions.create(
+            model="GPT-4o-mini",
+            messages=messages,
+            tools=[SEMANTIC_VOCABULARY_SEARCH_FUNCTION],
+            tool_choice="auto",
+        )
+
+        # Kiểm tra xem AI có gọi function không
+        if response.choices[0].message.tool_calls:
+            tool_call = response.choices[0].message.tool_calls[0]
+            if tool_call.function.name == "semantic_search_vocabulary":
+                function_args = json.loads(tool_call.function.arguments)
+                query = function_args.get("query", "")
+                limit = function_args.get("limit", 10)
+                similarity_threshold = function_args.get("similarity_threshold", 0.3)
+                
+                # Gọi function semantic search
+                search_result = semantic_search_vocabulary_function(query, limit, similarity_threshold)
+                
+                if search_result["success"]:
+                    # Format kết quả để hiển thị với similarity scores
+                    formatted_response = f"🔍 **Tìm thấy {search_result['count']} từ vựng liên quan đến '{query}' (Semantic Search):**\n\n"
+                    
+                    for i, word_data in enumerate(search_result["results"], 1):
+                        similarity_emoji = "🎯" if word_data['similarity_score'] >= 0.7 else "📍" if word_data['similarity_score'] >= 0.5 else "📌"
+                        formatted_response += f"**{i}. {word_data['word'].upper()}** /{word_data['phonetic']}/ ({word_data['part_of_speech']}) {similarity_emoji} {word_data['similarity_score']}\n"
+                        formatted_response += f"   📝 {word_data['vietnamese_meaning']}\n"
+                        formatted_response += f"   🏷️ Category: {word_data['category']}\n"
+                        if word_data['example_sentences']:
+                            formatted_response += f"   💡 Ví dụ: {word_data['example_sentences'][0]}\n"
+                        formatted_response += "\n"
+                    
+                    return jsonify({
+                        "success": True,
+                        "message": formatted_response,
+                        "type": "semantic_search",
+                        "query": query,
+                        "results": search_result["results"],
+                        "count": search_result["count"]
+                    })
+                else:
+                    return jsonify({
+                        "success": False,
+                        "message": search_result["message"],
+                        "type": "semantic_search"
+                    })
+        else:
+            # Không có function call, trả lời bình thường
+            ai_response = response.choices[0].message.content
+            return jsonify({
+                "success": True,
+                "message": ai_response,
+                "type": "general_chat"
+            })
 
     except Exception as e:
         return jsonify({"success": False, "message": f"❌ Đã xảy ra lỗi: {str(e)}"})

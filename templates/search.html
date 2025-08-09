@@ -132,10 +132,15 @@
         <div class="search-container">
             <div class="text-center mb-4">
                 <h1 class="display-4 text-primary mb-3">
-                    <i class="fas fa-tags me-3"></i>
-                    Tìm kiếm theo danh mục
+                    <i class="fas fa-brain me-3"></i>
+                    Tìm kiếm thông minh
                 </h1>
-                <p class="lead text-muted">Tìm kiếm tất cả từ vựng trong danh mục cụ thể</p>
+                <p class="lead text-muted">Tìm kiếm từ vựng bằng semantic search - hiểu ý nghĩa và ngữ cảnh</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Semantic Search:</strong> Tìm kiếm dựa trên ý nghĩa, không chỉ từ khóa. 
+                    Ví dụ: "từ về cảm xúc vui buồn", "words about travel", "công nghệ máy tính"
+                </div>
             </div>
 
             <!-- Search Form -->
@@ -143,30 +148,53 @@
                 <div class="col-md-8">
                     <div class="input-group">
                         <input type="text" id="searchInput" class="form-control search-input"
-                            placeholder="Nhập tên danh mục (ví dụ: Technology, Travel, Food...)">
-                        <button class="btn search-btn" type="button" onclick="performSearch()">
-                            <i class="fas fa-search me-2"></i>Tìm kiếm
+                            placeholder="Nhập từ khóa tìm kiếm (ví dụ: 'từ về du lịch', 'cảm xúc vui buồn', 'technology words')">
+                        <button class="btn search-btn" type="button" onclick="performSemanticSearch()">
+                            <i class="fas fa-brain me-2"></i>Tìm kiếm thông minh
                         </button>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Hỗ trợ tiếng Việt và tiếng Anh. Tìm kiếm theo ý nghĩa, không chỉ từ khóa chính xác.
+                        </small>
                     </div>
                 </div>
             </div>
 
-            <!-- Categories Stats -->
-            {% if categories %}
+            <!-- Example Queries -->
             <div class="mb-4">
                 <h5 class="text-center mb-3">
-                    <i class="fas fa-tags me-2"></i>
-                    Các danh mục có sẵn ({{ categories|length }} categories)
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Ví dụ tìm kiếm thông minh
                 </h5>
                 <div class="text-center">
-                    {% for category, count in categories.items() %}
-                    <button class="btn category-badge" onclick="selectCategory('{{ category }}')">
-                        {{ category }} ({{ count }})
+                    <button class="btn category-badge" onclick="selectQuery('các từ liên quan đến du lịch')">
+                        <i class="fas fa-plane me-1"></i>Du lịch
                     </button>
-                    {% endfor %}
+                    <button class="btn category-badge" onclick="selectQuery('từ vựng về công nghệ')">
+                        <i class="fas fa-laptop me-1"></i>Công nghệ
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('từ về cảm xúc vui buồn')">
+                        <i class="fas fa-heart me-1"></i>Cảm xúc
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('words about food and eating')">
+                        <i class="fas fa-utensils me-1"></i>Ăn uống
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('từ vựng kinh doanh')">
+                        <i class="fas fa-briefcase me-1"></i>Kinh doanh
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('health and medical terms')">
+                        <i class="fas fa-heartbeat me-1"></i>Sức khỏe
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('từ về thời tiết')">
+                        <i class="fas fa-cloud-sun me-1"></i>Thời tiết
+                    </button>
+                    <button class="btn category-badge" onclick="selectQuery('sports and exercise')">
+                        <i class="fas fa-running me-1"></i>Thể thao
+                    </button>
                 </div>
             </div>
-            {% endif %}
 
             <!-- Loading -->
             <div class="text-center loading" id="loading">
@@ -183,28 +211,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Search function (only category search)
-        async function performSearch() {
+        // Semantic search function
+        async function performSemanticSearch() {
             const query = document.getElementById('searchInput').value.trim();
 
             if (!query) {
-                alert('Vui lòng nhập tên danh mục');
+                alert('Vui lòng nhập từ khóa tìm kiếm');
                 return;
             }
 
             showLoading(true);
 
             try {
-                const response = await fetch('/api/search-category', {
+                const response = await fetch('/api/semantic-search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ category: query, limit: 50 })
+                    body: JSON.stringify({ message: query })
                 });
 
                 const data = await response.json();
-                displayResults(data);
+                displaySemanticResults(data);
             } catch (error) {
                 console.error('Error:', error);
                 displayError('Đã xảy ra lỗi khi tìm kiếm');
@@ -214,14 +242,19 @@
         }
 
         // Legacy function for backward compatibility
-        function searchByTopic() {
-            performSearch();
+        function performSearch() {
+            performSemanticSearch();
         }
 
-        // Select category function
+        // Select query function
+        function selectQuery(query) {
+            document.getElementById('searchInput').value = query;
+            performSemanticSearch();
+        }
+
+        // Legacy function for backward compatibility
         function selectCategory(category) {
-            document.getElementById('searchInput').value = category;
-            performSearch();
+            selectQuery(category);
         }
 
         // Show/hide loading
@@ -229,19 +262,33 @@
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
-        // Display search results
-        function displayResults(data) {
+        // Display semantic search results
+        function displaySemanticResults(data) {
             const resultsDiv = document.getElementById('searchResults');
 
             if (data.success && data.results && data.results.length > 0) {
                 let html = `
                     <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        ${data.message}
+                        <i class="fas fa-brain me-2"></i>
+                        <strong>Semantic Search:</strong> Tìm thấy ${data.count} từ vựng liên quan đến "${data.query}"
                     </div>
                 `;
 
-                data.results.forEach(word => {
+                data.results.forEach((word, index) => {
+                    // Determine similarity emoji and color
+                    let similarityEmoji = "🎯";
+                    let similarityColor = "success";
+                    if (word.similarity_score >= 0.7) {
+                        similarityEmoji = "🎯";
+                        similarityColor = "success";
+                    } else if (word.similarity_score >= 0.5) {
+                        similarityEmoji = "📍";
+                        similarityColor = "warning";
+                    } else {
+                        similarityEmoji = "📌";
+                        similarityColor = "info";
+                    }
+
                     html += `
                         <div class="word-card">
                             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -254,6 +301,13 @@
                                     <span class="badge bg-secondary me-2">${word.part_of_speech}</span>
                                     <span class="badge bg-info me-2">${word.category}</span>
                                     ${word.difficulty_level ? `<span class="badge bg-warning me-2">${word.difficulty_level}</span>` : ''}
+                                </div>
+                                <div class="text-end">
+                                    <span class="similarity-badge bg-${similarityColor}">
+                                        ${similarityEmoji} ${word.similarity_score}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">Độ liên quan</small>
                                 </div>
                             </div>
                             
@@ -301,6 +355,15 @@
                 });
 
                 resultsDiv.innerHTML = html;
+            } else if (data.type === 'general_chat') {
+                // Handle general chat response
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-comments me-2"></i>
+                        <strong>AI Response:</strong><br>
+                        ${data.message}
+                    </div>
+                `;
             } else {
                 resultsDiv.innerHTML = `
                     <div class="alert alert-warning text-center">
@@ -309,6 +372,11 @@
                     </div>
                 `;
             }
+        }
+
+        // Legacy function for backward compatibility
+        function displayResults(data) {
+            displaySemanticResults(data);
         }
 
         // Display error
@@ -324,7 +392,7 @@
         // Enter key support
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                performSearch();
+                performSemanticSearch();
             }
         });
     </script>

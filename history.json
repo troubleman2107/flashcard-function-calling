@@ -50,5 +50,83 @@
       "audio_text": "travel. du lịch.",
       "category": "Travel"
     }
+  },
+  {
+    "word": "happy",
+    "result": {
+      "formatted": "📚 **HAPPY** //ˈhæpi// (adjective) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** vui vẻ\n\n📝 **Ví dụ:**\n1. She felt happy when she received the good news.\n2. They had a happy celebration for her birthday.\n\n🔄 **Từ đồng nghĩa:** joyful, content, cheerful\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'happy' as 'having a pleasant day!'",
+      "structured": {
+        "word": "happy",
+        "vietnamese_meaning": "vui vẻ",
+        "part_of_speech": "adjective",
+        "phonetic": "/ˈhæpi/",
+        "example_sentences": [
+          "She felt happy when she received the good news.",
+          "They had a happy celebration for her birthday."
+        ],
+        "mnemonic_tip": "Think of 'happy' as 'having a pleasant day!'",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "joyful",
+          "content",
+          "cheerful"
+        ]
+      },
+      "audio_path": "/static/audio/happy_56ab24c1.wav",
+      "audio_text": "happy. vui vẻ.",
+      "category": "Emotions"
+    }
+  },
+  {
+    "word": "sad",
+    "result": {
+      "formatted": "📚 **SAD** //sæd// (adjective) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** buồn\n\n📝 **Ví dụ:**\n1. She felt sad after watching the movie.\n2. It's sad to see so many people struggling.\n\n🔄 **Từ đồng nghĩa:** unhappy, sorrowful, dejected\n\n💡 **Mẹo học dễ nhớ:**\nThink of a rainy day, which often makes people feel sad.",
+      "structured": {
+        "word": "sad",
+        "vietnamese_meaning": "buồn",
+        "part_of_speech": "adjective",
+        "phonetic": "/sæd/",
+        "example_sentences": [
+          "She felt sad after watching the movie.",
+          "It's sad to see so many people struggling."
+        ],
+        "mnemonic_tip": "Think of a rainy day, which often makes people feel sad.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "unhappy",
+          "sorrowful",
+          "dejected"
+        ]
+      },
+      "audio_path": "/static/audio/sad_49f0bad2.wav",
+      "audio_text": "sad. buồn.",
+      "category": "Emotions"
+    }
+  },
+  {
+    "word": "journey",
+    "result": {
+      "formatted": "📚 **JOURNEY** //ˈdʒɜːrni// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** cuộc hành trình\n\n📝 **Ví dụ:**\n1. The journey to the top of the mountain took several hours.\n2. They documented their journey across Europe in a blog.\n\n🔄 **Từ đồng nghĩa:** trip, voyage, expedition\n\n💡 **Mẹo học dễ nhớ:**\nThink of 'journey' as a 'joyful journey'—both start with 'joy' to help remember it relates to travel.",
+      "structured": {
+        "word": "journey",
+        "vietnamese_meaning": "cuộc hành trình",
+        "part_of_speech": "noun",
+        "phonetic": "/ˈdʒɜːrni/",
+        "example_sentences": [
+          "The journey to the top of the mountain took several hours.",
+          "They documented their journey across Europe in a blog."
+        ],
+        "mnemonic_tip": "Think of 'journey' as a 'joyful journey'—both start with 'joy' to help remember it relates to travel.",
+        "difficulty_level": "intermediate",
+        "synonyms": [
+          "trip",
+          "voyage",
+          "expedition"
+        ]
+      },
+      "audio_path": "/static/audio/journey_98dc0157.wav",
+      "audio_text": "journey. cuộc hành trình.",
+      "category": "Travel"
+    }
   }
 ]
