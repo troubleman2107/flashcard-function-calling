@@ -1,588 +1,775 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vocabulary Flashcards</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vocabulary Flashcards</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+      body {
+        background-color: #f4f6f8;
+        padding: 0;
+      }
 
-  <style>
-    body {
-      background-color: #f4f6f8;
-      padding: 0;
-    }
+      .navbar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
 
-    .navbar {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
 
-    .navbar-brand {
-      font-weight: 700;
-      font-size: 1.5rem;
-    }
+      .main-content {
+        padding: 40px;
+      }
 
-    .main-content {
-      padding: 40px;
-    }
+      .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
 
-    .page-header {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding: 2rem 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
+      .flashcard {
+        background-color: transparent;
+        border-radius: 15px;
+        padding: 0;
+        height: 350px;
+        perspective: 1000px;
+        cursor: pointer;
+        width: 70%;
+      }
 
-    .flashcard {
-      background-color: transparent;
-      border-radius: 15px;
-      padding: 0;
-      height: 300px;
-      perspective: 1000px;
-      cursor: pointer;
-      width: 70%;
-    }
+      .card-flip {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+      }
 
-    .card-flip {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-radius: 15px;
-    }
+      .card-flip.flipped {
+        transform: rotateX(180deg);
+      }
 
-    /* Flip dọc theo trục X */
-    .card-flip.flipped {
-      transform: rotateX(180deg);
-    }
+      .card-front,
+      .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 15px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        overflow-y: auto;
+        text-align: center;
+      }
 
-    .card-front,
-    .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 15px;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #fff;
-      overflow-y: auto;
-      text-align: center;
-    }
+      .card-back {
+        transform: rotateX(180deg);
+        background-color: #f9f9f9;
+        text-align: left;
+        padding: 15px;
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
 
-    /* Mặt sau cũng xoay 180 độ theo trục X */
-    .card-back {
-      transform: rotateX(180deg);
-      background-color: #f9f9f9;
-      text-align: left;
-      padding: 15px;
-      justify-content: flex-start;
-      align-items: flex-start;
-    }
+      .card-front-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
 
-    .card-back pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      word-break: break-word;
-      font-size: 0.9rem;
-      text-align: left;
-      margin: 0;
-      font-family: inherit;
-      width: 100%;
-    }
+      .card-back pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        font-size: 0.9rem;
+        text-align: left;
+        margin: 0;
+        font-family: inherit;
+        width: 100%;
+      }
 
-    .swiper {
-      width: 100%;
-      padding-bottom: 40px;
-    }
+      .swiper {
+        width: 100%;
+        padding-bottom: 40px;
+      }
 
-    .swiper-slide {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+      .swiper-slide {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-    .card-controls {
-      text-align: center;
-      margin-top: 20px;
-    }
+      .card-controls {
+        text-align: center;
+        margin-top: 20px;
+      }
 
-    .card-controls button {
-      margin: 0 5px;
-    }
+      .card-controls button {
+        margin: 0 5px;
+      }
 
-    h5 {
-      font-weight: 700;
-      font-size: 1.5rem;
-      margin: 0;
-    }
+      h5 {
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+      }
 
-    .stats-info {
-      text-align: center;
-      margin-bottom: 1rem;
-      color: #6c757d;
-    }
+      .stats-info {
+        text-align: center;
+        margin-bottom: 1rem;
+        color: #6c757d;
+      }
 
-    .form-section {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      margin-bottom: 2rem;
-    }
+      .form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
 
-    .vocabulary-content {
-      padding: 0;
-      font-size: 0.85rem;
-      line-height: 1.4;
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-    }
+      /* Audio Controls on Flashcards */
+      .card-audio-controls {
+        margin-top: 1rem;
+      }
 
-    .word-header {
-      text-align: center;
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid #e9ecef;
-    }
+      .btn-card-audio {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-    .word-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #667eea;
-      margin: 0 0 0.25rem 0;
-    }
+      .btn-card-audio:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
+        transform: scale(1.05);
+        color: white;
+      }
 
-    .phonetic {
-      font-size: 0.9rem;
-      color: #6c757d;
-      font-style: italic;
-      margin-bottom: 0.5rem;
-    }
+      .btn-card-audio:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+      }
 
-    .word-meta {
-      display: flex;
-      justify-content: center;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
+      .btn-card-audio.playing {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      }
 
-    .pos-tag {
-      background: #f8f9fa;
-      color: #495057;
-      padding: 0.2rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 500;
-    }
+      .vocabulary-content {
+        padding: 0;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+      }
 
-    .difficulty-badge {
-      padding: 0.2rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: white;
-    }
+      .word-header {
+        text-align: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e9ecef;
+      }
 
-    .difficulty-beginner {
-      background: #28a745;
-    }
+      .word-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #667eea;
+        margin: 0 0 0.25rem 0;
+      }
 
-    .difficulty-intermediate {
-      background: #ffc107;
-      color: #212529;
-    }
+      .phonetic {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-style: italic;
+        margin-bottom: 0.5rem;
+      }
 
-    .difficulty-advanced {
-      background: #dc3545;
-    }
+      .word-meta {
+        display: flex;
+        justify-content: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
 
-    .section-title {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.4rem;
-      font-size: 0.8rem;
-    }
+      .pos-tag {
+        background: #f8f9fa;
+        color: #495057;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+      }
 
-    .meaning-section {
-      margin-bottom: 1rem;
-    }
+      .difficulty-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: white;
+      }
 
-    .meaning {
-      background: #f8f9fa;
-      padding: 0.6rem;
-      border-radius: 6px;
-      font-weight: 500;
-      color: #495057;
-      font-size: 0.85rem;
-    }
+      .difficulty-beginner {
+        background: #28a745;
+      }
 
-    .examples-section {
-      margin-bottom: 1rem;
-    }
+      .difficulty-intermediate {
+        background: #ffc107;
+        color: #212529;
+      }
 
-    .examples-list {
-      margin: 0;
-      padding-left: 1rem;
-    }
+      .difficulty-advanced {
+        background: #dc3545;
+      }
 
-    .examples-list li {
-      margin-bottom: 0.3rem;
-      color: #495057;
-      font-size: 0.8rem;
-    }
+      .section-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+      }
 
-    .synonyms-section {
-      margin-bottom: 1rem;
-    }
+      .meaning-section {
+        margin-bottom: 1rem;
+      }
 
-    .synonyms {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-    }
+      .meaning {
+        background: #f8f9fa;
+        padding: 0.6rem;
+        border-radius: 6px;
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.85rem;
+      }
 
-    .synonym-tag {
-      background: #e9ecef;
-      color: #495057;
-      padding: 0.2rem 0.4rem;
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 500;
-    }
+      .examples-section {
+        margin-bottom: 1rem;
+      }
 
-    .mnemonic-section {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 6px;
-      padding: 0.6rem;
-    }
+      .examples-list {
+        margin: 0;
+        padding-left: 1rem;
+      }
 
-    .mnemonic {
-      color: #856404;
-      font-style: italic;
-      margin: 0;
-      font-size: 0.8rem;
-    }
+      .examples-list li {
+        margin-bottom: 0.3rem;
+        color: #495057;
+        font-size: 0.8rem;
+      }
 
-    .chat-cta {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      color: white;
-      padding: 1.5rem;
-      border-radius: 15px;
-      text-align: center;
-      margin-bottom: 2rem;
-      text-decoration: none;
-      display: block;
-      transition: transform 0.3s ease;
-    }
+      .synonyms-section {
+        margin-bottom: 1rem;
+      }
 
-    .chat-cta:hover {
-      color: white;
-      text-decoration: none;
-      transform: translateY(-2px);
-    }
+      .synonyms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
 
-    .chat-cta i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
+      .synonym-tag {
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.2rem 0.4rem;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 500;
+      }
 
-    /* CSS cho button Phân tích - đồng nhất với thiết kế trang */
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-      border: none !important;
-      border-radius: 12px !important;
-      padding: 12px 24px !important;
-      font-weight: 600 !important;
-      font-size: 0.95rem !important;
-      color: white !important;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
-      transition: all 0.3s ease !important;
-      position: relative !important;
-      overflow: hidden !important;
-    }
+      .mnemonic-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        padding: 0.6rem;
+      }
 
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
-      color: white !important;
-    }
+      .mnemonic {
+        color: #856404;
+        font-style: italic;
+        margin: 0;
+        font-size: 0.8rem;
+      }
 
-    .btn-primary:active,
-    .btn-primary:focus {
-      background: linear-gradient(135deg, #4e5bc6 0%, #5e377e 100%) !important;
-      transform: translateY(0) !important;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
-      color: white !important;
-      outline: none !important;
-    }
+      .chat-cta {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 2rem;
+        text-decoration: none;
+        display: block;
+        transition: transform 0.3s ease;
+      }
 
-    /* Hiệu ứng ripple khi click */
-    .btn-primary::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.3s, height 0.3s;
-    }
+      .chat-cta:hover {
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+      }
 
-    .btn-primary:active::before {
-      width: 300px;
-      height: 300px;
-    }
+      .chat-cta i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
 
-    /* Icon trong button */
-    .btn-primary i {
-      margin-right: 8px !important;
-      font-size: 1rem !important;
-    }
-
-    /* Responsive cho mobile */
-    @media (max-width: 768px) {
       .btn-primary {
-        padding: 10px 20px !important;
-        font-size: 0.9rem !important;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 100%
+        ) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        transition: all 0.3s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
       }
-      
+
+      .btn-primary:hover {
+        background: linear-gradient(
+          135deg,
+          #5a6fd8 0%,
+          #6a4190 100%
+        ) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+        color: white !important;
+      }
+
+      .btn-primary:active,
+      .btn-primary:focus {
+        background: linear-gradient(
+          135deg,
+          #4e5bc6 0%,
+          #5e377e 100%
+        ) !important;
+        transform: translateY(0) !important;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+        color: white !important;
+        outline: none !important;
+      }
+
+      .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+      }
+
+      .btn-primary:active::before {
+        width: 300px;
+        height: 300px;
+      }
+
       .btn-primary i {
-        margin-right: 6px !important;
-        font-size: 0.9rem !important;
+        margin-right: 8px !important;
+        font-size: 1rem !important;
       }
-    }
 
+      @media (max-width: 768px) {
+        .btn-primary {
+          padding: 10px 20px !important;
+          font-size: 0.9rem !important;
+        }
 
+        .btn-primary i {
+          margin-right: 6px !important;
+          font-size: 0.9rem !important;
+        }
 
+        .flashcard {
+          width: 90%;
+          height: 400px;
+        }
+      }
+    </style>
+  </head>
 
-  </style>
-</head>
-
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-      <a class="navbar-brand" href="{{ url_for('index') }}">
-        <i class="bi bi-journal-bookmark"></i> FlashCard
-      </a>
-      <div class="navbar-nav ms-auto">
-        <a class="nav-link active" href="{{ url_for('index') }}">
-          <i class="bi bi-cards"></i> Thẻ học
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <i class="bi bi-journal-bookmark"></i> FlashCard
         </a>
-        <a class="nav-link" href="{{ url_for('flashcard_list') }}">
-          <i class="bi bi-list-ul"></i> Danh sách
-        </a>
-        <a class="nav-link" href="{{ url_for('chat') }}">
-          <i class="bi bi-chat-dots"></i> Chat
-        </a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="main-content">
-    <div class="container">
-      <div class="page-header">
-        <h1><i class="bi bi-journal-bookmark"></i> Vocabulary Flashcards</h1>
-        <p>Học từ vựng tiếng Anh một cách thông minh</p>
-      </div>
-
-      <!-- Chat CTA -->
-      <a href="{{ url_for('chat') }}" class="chat-cta">
-        <div>
-          <i class="bi bi-chat-dots-fill d-block"></i>
-          <h4 class="mb-1">🤖 Trợ lý học từ vựng thông minh</h4>
-          <p class="mb-0">Chat với AI để thêm từ mới hoặc phân tích văn bản một cách dễ dàng!</p>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link active" href="{{ url_for('index') }}">
+            <i class="bi bi-cards"></i> Thẻ học
+          </a>
+          <a class="nav-link" href="{{ url_for('flashcard_list') }}">
+            <i class="bi bi-list-ul"></i> Danh sách
+          </a>
+          <a class="nav-link" href="{{ url_for('chat') }}">
+            <i class="bi bi-chat-dots"></i> Chat
+          </a>
         </div>
-      </a>
+      </div>
+    </nav>
 
-      <div class="form-section">
-        <h5 class="mb-3">
-          <i class="bi bi-plus-circle"></i> Thêm từ vựng thủ công
-        </h5>
-        <form method="POST" class="d-flex gap-2" autocomplete="off">
-          <input type="text" class="form-control" name="word" placeholder="Nhập từ tiếng Anh..." required />
-          <button class="btn btn-primary">
-            Phân tích
+    <div class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <h1><i class="bi bi-journal-bookmark"></i> Vocabulary Flashcards</h1>
+          <p>Học từ vựng tiếng Anh một cách thông minh</p>
+        </div>
+
+        <!-- Chat CTA -->
+        <a href="{{ url_for('chat') }}" class="chat-cta">
+          <div>
+            <i class="bi bi-chat-dots-fill d-block"></i>
+            <h4 class="mb-1">🤖 Trợ lý học từ vựng thông minh</h4>
+            <p class="mb-0">
+              Chat với AI để thêm từ mới hoặc phân tích văn bản một cách dễ
+              dàng!
+            </p>
+          </div>
+        </a>
+
+        <div class="form-section">
+          <h5 class="mb-3">
+            <i class="bi bi-plus-circle"></i> Thêm từ vựng thủ công
+          </h5>
+          <form method="POST" class="d-flex gap-2" autocomplete="off">
+            <input
+              type="text"
+              class="form-control"
+              name="word"
+              placeholder="Nhập từ tiếng Anh..."
+              required
+            />
+            <button class="btn btn-primary">Phân tích</button>
+          </form>
+        </div>
+
+        {% if result %}
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle"></i> Từ mới
+          <strong>{{ word }}</strong> đã được thêm!
+          <a
+            href="{{ url_for('flashcard_list') }}"
+            class="btn btn-sm btn-outline-primary ms-2"
+          >
+            <i class="bi bi-list-ul"></i> Xem danh sách
+          </a>
+        </div>
+        {% endif %} {% if history %}
+        <div class="stats-info">
+          <i class="bi bi-collection"></i>
+          Bạn đã học <strong>{{ history|length }}</strong> từ vựng
+          <a
+            href="{{ url_for('flashcard_list') }}"
+            class="btn btn-sm btn-outline-secondary ms-2"
+          >
+            <i class="bi bi-list-ul"></i> Xem tất cả
+          </a>
+        </div>
+
+        <div class="text-end mb-2">
+          <button class="btn btn-secondary btn-sm" onclick="shuffleCards()">
+            <i class="bi bi-shuffle"></i> Trộn bài
           </button>
-        </form>
-      </div>
+        </div>
 
-      {% if result %}
-      <div class="alert alert-success">
-        <i class="bi bi-check-circle"></i> Từ mới <strong>{{ word }}</strong> đã được thêm!
-        <a href="{{ url_for('flashcard_list') }}" class="btn btn-sm btn-outline-primary ms-2">
-          <i class="bi bi-list-ul"></i> Xem danh sách
-        </a>
-      </div>
-      {% endif %}
-
-      {% if history %}
-      <div class="stats-info">
-        <i class="bi bi-collection"></i>
-        Bạn đã học <strong>{{ history|length }}</strong> từ vựng
-        <a href="{{ url_for('flashcard_list') }}" class="btn btn-sm btn-outline-secondary ms-2">
-          <i class="bi bi-list-ul"></i> Xem tất cả
-        </a>
-      </div>
-
-      <div class="text-end mb-2">
-        <button class="btn btn-secondary btn-sm" onclick="shuffleCards()">
-          <i class="bi bi-shuffle"></i> Trộn bài
-        </button>
-      </div>
-
-      <div class="swiper">
-        <div class="swiper-wrapper" id="flashcard-wrapper">
-          {% for item in history %}
-          <div class="swiper-slide">
-            <div class="flashcard">
-              <div class="card-flip" tabindex="0" onclick="this.classList.toggle('flipped')">
-                <div class="card-front">
-                  <h5>{{ item.result.structured.word }}</h5>
-                </div>
-                <div class="card-back">
-                  {% if item.result.structured %}
+        <div class="swiper">
+          <div class="swiper-wrapper" id="flashcard-wrapper">
+            {% for item in history %}
+            <div class="swiper-slide">
+              <div class="flashcard">
+                <div
+                  class="card-flip"
+                  tabindex="0"
+                  onclick="this.classList.toggle('flipped')"
+                >
+                  <div class="card-front">
+                    <div class="card-front-content">
+                      <h5>
+                        {{ item.result.structured.word if item.result.structured
+                        else item.word }}
+                      </h5>
+                      {% if item.result.audio_path %}
+                      <div class="card-audio-controls">
+                        <button
+                          class="btn-card-audio"
+                          onclick="event.stopPropagation(); playAudio('{{ item.result.audio_path }}', this)"
+                        >
+                          <i class="bi bi-volume-up"></i> Nghe phát âm
+                        </button>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="card-back">
+                    {% if item.result.structured %}
                     <div class="vocabulary-content">
                       <div class="word-header">
-                        <h3 class="word-title">{{ item.result.structured.word.upper() }}</h3>
+                        <h3 class="word-title">
+                          {{ item.result.structured.word.upper() }}
+                        </h3>
                         {% if item.result.structured.phonetic %}
-                          <div class="phonetic">/{{ item.result.structured.phonetic }}/</div>
+                        <div class="phonetic">
+                          /{{ item.result.structured.phonetic }}/
+                        </div>
                         {% endif %}
                         <div class="word-meta">
                           {% if item.result.structured.part_of_speech %}
-                            <span class="pos-tag">{{ item.result.structured.part_of_speech }}</span>
-                          {% endif %}
-                          {% if item.result.structured.difficulty_level %}
-                            <span class="difficulty-badge difficulty-{{ item.result.structured.difficulty_level }}">
-                              {% if item.result.structured.difficulty_level == 'beginner' %}🟢{% elif item.result.structured.difficulty_level == 'intermediate' %}🟡{% else %}🔴{% endif %}
-                              {{ item.result.structured.difficulty_level.title() }}
-                            </span>
+                          <span class="pos-tag"
+                            >{{ item.result.structured.part_of_speech }}</span
+                          >
+                          {% endif %} {% if
+                          item.result.structured.difficulty_level %}
+                          <span
+                            class="difficulty-badge difficulty-{{ item.result.structured.difficulty_level }}"
+                          >
+                            {% if item.result.structured.difficulty_level ==
+                            'beginner' %}🟢{% elif
+                            item.result.structured.difficulty_level ==
+                            'intermediate' %}🟡{% else %}🔴{% endif %} {{
+                            item.result.structured.difficulty_level.title() }}
+                          </span>
                           {% endif %}
                         </div>
                       </div>
-                      
+
+                      {% if item.result.audio_path %}
+                      <div class="text-center mb-3">
+                        <button
+                          class="btn-card-audio"
+                          onclick="event.stopPropagation(); playAudio('{{ item.result.audio_path }}', this)"
+                        >
+                          <i class="bi bi-volume-up"></i> Nghe phát âm
+                        </button>
+                      </div>
+                      {% endif %}
+
                       <div class="meaning-section">
                         <div class="section-title">🇻🇳 Nghĩa</div>
-                        <div class="meaning">{{ item.result.structured.vietnamese_meaning }}</div>
+                        <div class="meaning">
+                          {{ item.result.structured.vietnamese_meaning }}
+                        </div>
                       </div>
-                      
+
                       {% if item.result.structured.example_sentences %}
-                        <div class="examples-section">
-                          <div class="section-title">📝 Ví dụ</div>
-                          <ol class="examples-list">
-                            {% for sentence in item.result.structured.example_sentences %}
-                              <li>{{ sentence }}</li>
-                            {% endfor %}
-                          </ol>
+                      <div class="examples-section">
+                        <div class="section-title">📝 Ví dụ</div>
+                        <ol class="examples-list">
+                          {% for sentence in
+                          item.result.structured.example_sentences %}
+                          <li>{{ sentence }}</li>
+                          {% endfor %}
+                        </ol>
+                      </div>
+                      {% endif %} {% if item.result.structured.synonyms %}
+                      <div class="synonyms-section">
+                        <div class="section-title">🔄 Từ đồng nghĩa</div>
+                        <div class="synonyms">
+                          {% for synonym in item.result.structured.synonyms %}
+                          <span class="synonym-tag">{{ synonym }}</span>
+                          {% endfor %}
                         </div>
-                      {% endif %}
-                      
-                      {% if item.result.structured.synonyms %}
-                        <div class="synonyms-section">
-                          <div class="section-title">🔄 Từ đồng nghĩa</div>
-                          <div class="synonyms">
-                            {% for synonym in item.result.structured.synonyms %}
-                              <span class="synonym-tag">{{ synonym }}</span>
-                            {% endfor %}
-                          </div>
+                      </div>
+                      {% endif %} {% if item.result.structured.mnemonic_tip %}
+                      <div class="mnemonic-section">
+                        <div class="section-title">💡 Mẹo học dễ nhớ</div>
+                        <div class="mnemonic">
+                          {{ item.result.structured.mnemonic_tip }}
                         </div>
-                      {% endif %}
-                      
-                      {% if item.result.structured.mnemonic_tip %}
-                        <div class="mnemonic-section">
-                          <div class="section-title">💡 Mẹo học dễ nhớ</div>
-                          <div class="mnemonic">{{ item.result.structured.mnemonic_tip }}</div>
-                        </div>
+                      </div>
                       {% endif %}
                     </div>
-                  {% else %}
+                    {% else %}
                     <pre>{{ item.result.formatted or item.result }}</pre>
-                  {% endif %}
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             </div>
+            {% endfor %}
           </div>
-          {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i
+            class="bi bi-journal-x"
+            style="font-size: 4rem; color: #dee2e6"
+          ></i>
+          <h3 class="mt-3">Chưa có flashcard nào</h3>
+          <p class="text-muted">Hãy thêm từ vựng đầu tiên của bạn!</p>
+          <a href="{{ url_for('chat') }}" class="btn btn-primary btn-lg mt-3">
+            <i class="bi bi-chat-dots"></i> Bắt đầu với Chat Assistant
+          </a>
+        </div>
+        {% endif %}
       </div>
-      {% else %}
-      <div class="text-center py-5">
-        <i class="bi bi-journal-x" style="font-size: 4rem; color: #dee2e6;"></i>
-        <h3 class="mt-3">Chưa có flashcard nào</h3>
-        <p class="text-muted">Hãy thêm từ vựng đầu tiên của bạn!</p>
-        <a href="{{ url_for('chat') }}" class="btn btn-primary btn-lg mt-3">
-          <i class="bi bi-chat-dots"></i> Bắt đầu với Chat Assistant
-        </a>
-      </div>
-      {% endif %}
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script>
-    const swiper = new Swiper(".swiper", {
-      navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
-      },
-      loop: false,
-    });
+    <!-- Hidden audio element for playback -->
+    <audio id="global-audio-player" preload="none"></audio>
 
-    // Shuffle cards
-    function shuffleCards() {
-      const wrapper = document.getElementById("flashcard-wrapper");
-      const slides = Array.from(wrapper.children);
-      for (let i = slides.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        var temp = slides[i];
-        slides[i] = slides[j];
-        slides[j] = temp;
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+      let currentAudio = null;
+
+      // Audio control functions
+      function playAudio(audioPath, buttonElement) {
+        if (!audioPath) {
+          console.log("No audio path provided");
+          return;
+        }
+
+        const audioPlayer = document.getElementById("global-audio-player");
+
+        // Stop current audio if playing
+        if (currentAudio && !currentAudio.paused) {
+          currentAudio.pause();
+          resetAudioButtons();
+        }
+
+        // Set up new audio
+        audioPlayer.src = audioPath;
+        currentAudio = audioPlayer;
+
+        // Update button state
+        if (buttonElement) {
+          buttonElement.innerHTML =
+            '<i class="bi bi-pause-fill"></i> Đang phát...';
+          buttonElement.classList.add("playing");
+          buttonElement.disabled = true;
+        }
+
+        // Play audio
+        audioPlayer
+          .play()
+          .then(() => {
+            console.log("Audio playing successfully");
+          })
+          .catch((error) => {
+            console.error("Error playing audio:", error);
+            if (buttonElement) {
+              buttonElement.innerHTML =
+                '<i class="bi bi-exclamation-circle"></i> Lỗi';
+              buttonElement.classList.remove("playing");
+              buttonElement.disabled = false;
+            }
+          });
+
+        // Handle audio end
+        audioPlayer.onended = () => {
+          resetAudioButtons();
+        };
+
+        // Handle audio error
+        audioPlayer.onerror = () => {
+          console.error("Audio load error");
+          resetAudioButtons();
+        };
       }
-      wrapper.innerHTML = "";
-      slides.forEach(function (s) {
-        wrapper.appendChild(s);
+
+      function resetAudioButtons() {
+        document.querySelectorAll(".btn-card-audio").forEach((btn) => {
+          btn.innerHTML = '<i class="bi bi-volume-up"></i> Nghe phát âm';
+          btn.classList.remove("playing");
+          btn.disabled = false;
+        });
+      }
+
+      const swiper = new Swiper(".swiper", {
+        navigation: {
+          nextEl: ".swiper-button-next",
+          prevEl: ".swiper-button-prev",
+        },
+        loop: false,
       });
-      swiper.update();
-    }
 
-    // Keyboard controls
-    document.addEventListener("keydown", function (event) {
-      const key = event.key;
-      const activeSlide = document.querySelector(".swiper-slide-active");
-      if (!activeSlide) return;
-      const cardFlip = activeSlide.querySelector(".card-flip");
-      if (!cardFlip) return;
-
-      switch (key) {
-        case "ArrowUp":
-        case "ArrowDown":
-          cardFlip.classList.toggle("flipped");
-          break;
-        case "ArrowLeft":
-          swiper.slidePrev();
-          break;
-        case "ArrowRight":
-          swiper.slideNext();
-          break;
+      // Shuffle cards
+      function shuffleCards() {
+        const wrapper = document.getElementById("flashcard-wrapper");
+        const slides = Array.from(wrapper.children);
+        for (let i = slides.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          var temp = slides[i];
+          slides[i] = slides[j];
+          slides[j] = temp;
+        }
+        wrapper.innerHTML = "";
+        slides.forEach(function (s) {
+          wrapper.appendChild(s);
+        });
+        swiper.update();
       }
-    });
-  </script>
-</body>
 
+      // Keyboard controls
+      document.addEventListener("keydown", function (event) {
+        const key = event.key;
+        const activeSlide = document.querySelector(".swiper-slide-active");
+        if (!activeSlide) return;
+        const cardFlip = activeSlide.querySelector(".card-flip");
+        if (!cardFlip) return;
+
+        switch (key) {
+          case "ArrowUp":
+          case "ArrowDown":
+            cardFlip.classList.toggle("flipped");
+            break;
+          case "ArrowLeft":
+            swiper.slidePrev();
+            break;
+          case "ArrowRight":
+            swiper.slideNext();
+            break;
+          case " ": // Spacebar for audio
+            event.preventDefault();
+            const audioBtn = activeSlide.querySelector(".btn-card-audio");
+            if (audioBtn && !audioBtn.disabled) {
+              audioBtn.click();
+            }
+            break;
+        }
+      });
+    </script>
+  </body>
 </html>

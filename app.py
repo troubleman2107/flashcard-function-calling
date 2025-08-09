@@ -1,13 +1,88 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+    send_from_directory,
+)
+from transformers import VitsModel, AutoTokenizer
 import openai
 import json
 import os
 import re
+import torch
+import soundfile as sf
+import time
+import hashlib
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
+
+
+# TTS Service Class
+class TTSService:
+    def __init__(self):
+        self.model = None
+        self.tokenizer = None
+        self.audio_dir = "static/audio"
+        os.makedirs(self.audio_dir, exist_ok=True)
+        self._initialize_models()
+
+    def _initialize_models(self):
+        """Initialize TTS models lazily"""
+        try:
+            print("Loading TTS models...")
+            self.model = VitsModel.from_pretrained("facebook/mms-tts-vie")
+            self.tokenizer = AutoTokenizer.from_pretrained("facebook/mms-tts-vie")
+            print("TTS models loaded successfully!")
+        except Exception as e:
+            print(f"Error loading TTS models: {e}")
+            self.model = None
+            self.tokenizer = None
+
+    def generate_audio(self, word, vietnamese_meaning):
+        """Generate audio for a word with Vietnamese meaning"""
+        if not self.model or not self.tokenizer:
+            print("TTS models not available")
+            return None
+
+        try:
+            # Create text for TTS (English word + Vietnamese meaning)
+            tts_text = f"{word}. {vietnamese_meaning}."
+
+            # Generate unique filename based on content hash
+            content_hash = hashlib.md5(tts_text.encode()).hexdigest()[:8]
+            filename = f"{word}_{content_hash}.wav"
+            filepath = os.path.join(self.audio_dir, filename)
+
+            # Check if file already exists
+            if os.path.exists(filepath):
+                return f"/static/audio/{filename}"
+
+            # Generate audio
+            inputs = self.tokenizer(tts_text, return_tensors="pt")
+            with torch.no_grad():
+                output = self.model(**inputs).waveform
+
+            # Save audio file
+            sf.write(
+                filepath, output.squeeze().numpy(), self.model.config.sampling_rate
+            )
+            print(f"Generated audio: {filepath}")
+
+            return f"/static/audio/{filename}"
+
+        except Exception as e:
+            print(f"Error generating audio for '{word}': {e}")
+            return None
+
+
+# Initialize TTS service
+tts_service = TTSService()
 
 # Khởi tạo OpenAI client
 client = openai.OpenAI(
@@ -17,7 +92,7 @@ client = openai.OpenAI(
 
 HISTORY_FILE = "history.json"
 
-# Định nghĩa function schema cho OpenAI
+# Function schemas remain the same
 VOCABULARY_FUNCTION = {
     "type": "function",
     "function": {
@@ -147,7 +222,7 @@ TEXT_ANALYSIS_FUNCTION = {
 }
 
 
-# Hàm lưu kết quả vào file JSON
+# Enhanced save_to_history function with audio
 def save_to_history(word, result):
     history_data = []
     if os.path.exists(HISTORY_FILE):
@@ -157,13 +232,20 @@ def save_to_history(word, result):
             except json.JSONDecodeError:
                 pass
 
+    # Generate audio if structured data is available
+    if result.get("structured") and result["structured"].get("vietnamese_meaning"):
+        vietnamese_meaning = result["structured"]["vietnamese_meaning"]
+        audio_path = tts_service.generate_audio(word, vietnamese_meaning)
+        if audio_path:
+            result["audio_path"] = audio_path
+            result["audio_text"] = f"{word}. {vietnamese_meaning}."
+
     history_data.append({"word": word, "result": result})
 
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(history_data, f, ensure_ascii=False, indent=2)
 
 
-# Hàm lấy danh sách flashcard
 def get_history():
     history = []
     if os.path.exists(HISTORY_FILE):
@@ -175,16 +257,27 @@ def get_history():
     return history
 
 
-# Hàm xóa flashcard
 def delete_flashcard(index):
     history_data = get_history()
     if 0 <= index < len(history_data):
+        # Delete associated audio file if it exists
+        deleted_item = history_data[index]
+        if "result" in deleted_item and "audio_path" in deleted_item["result"]:
+            audio_path = deleted_item["result"]["audio_path"]
+            # Convert web path to file path
+            file_path = audio_path.replace("/static/", "static/")
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    print(f"Deleted audio file: {file_path}")
+                except Exception as e:
+                    print(f"Error deleting audio file: {e}")
+
         del history_data[index]
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history_data, f, ensure_ascii=False, indent=2)
 
 
-# Hàm format kết quả từ function calling
 def format_vocabulary_result(function_data):
     """Format the structured data from function calling into readable text"""
     word = function_data.get("word", "")
@@ -196,7 +289,6 @@ def format_vocabulary_result(function_data):
     difficulty_level = function_data.get("difficulty_level", "")
     synonyms = function_data.get("synonyms", [])
 
-    # Tạo formatted string
     result = f"📚 **{word.upper()}**"
 
     if phonetic:
@@ -225,7 +317,6 @@ def format_vocabulary_result(function_data):
     return result
 
 
-# Hàm gọi API với function calling cho từ đơn
 def explain_word(word):
     try:
         messages = [
@@ -252,20 +343,16 @@ def explain_word(word):
             },
         )
 
-        # Xử lý response từ function calling
         if response.choices[0].message.tool_calls:
             tool_call = response.choices[0].message.tool_calls[0]
             if tool_call.function.name == "analyze_vocabulary":
                 function_args = json.loads(tool_call.function.arguments)
 
-                # Lưu cả structured data và formatted text
                 structured_data = function_args
                 formatted_result = format_vocabulary_result(function_args)
 
-                # Trả về cả hai dạng dữ liệu
                 return {"formatted": formatted_result, "structured": structured_data}
 
-        # Fallback nếu function calling không hoạt động
         return {
             "formatted": f"Không thể phân tích từ '{word}'. Vui lòng thử lại.",
             "structured": None,
@@ -279,7 +366,6 @@ def explain_word(word):
         }
 
 
-# Hàm phân tích văn bản và trích xuất từ vựng
 def analyze_text_for_vocabulary(text):
     try:
         messages = [
@@ -309,14 +395,12 @@ def analyze_text_for_vocabulary(text):
             },
         )
 
-        # Xử lý response từ function calling
         if response.choices[0].message.tool_calls:
             tool_call = response.choices[0].message.tool_calls[0]
             if tool_call.function.name == "extract_vocabulary_from_text":
                 function_args = json.loads(tool_call.function.arguments)
                 vocabulary_list = function_args.get("vocabulary_list", [])
 
-                # Format mỗi từ và trả về danh sách
                 results = []
                 for vocab_data in vocabulary_list:
                     formatted_result = format_vocabulary_result(vocab_data)
@@ -337,6 +421,7 @@ def analyze_text_for_vocabulary(text):
         return []
 
 
+# Routes
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
@@ -373,7 +458,6 @@ def chat_api():
 
     try:
         if chat_type == "word":
-            # Xử lý thêm từ đơn
             result_data = explain_word(message)
             if result_data["structured"]:
                 save_to_history(message, result_data)
@@ -383,6 +467,7 @@ def chat_api():
                         "message": f"✅ Đã thêm từ '{message}' vào flashcard!",
                         "result": result_data["formatted"],
                         "structured_data": result_data["structured"],
+                        "audio_path": result_data.get("audio_path"),
                         "type": "word",
                     }
                 )
@@ -395,10 +480,8 @@ def chat_api():
                 )
 
         elif chat_type == "text":
-            # Xử lý phân tích văn bản
             vocabulary_results = analyze_text_for_vocabulary(message)
             if vocabulary_results:
-                # Lưu tất cả từ vào history
                 for vocab in vocabulary_results:
                     save_to_history(vocab["word"], vocab)
 
@@ -440,7 +523,6 @@ def flashcard_list():
 def delete_flashcard_route(index):
     """Xóa flashcard theo index"""
     history = get_history()
-    # Chuyển đổi index vì list được đảo ngược khi hiển thị
     actual_index = len(history) - 1 - index
     delete_flashcard(actual_index)
     return redirect(url_for("flashcard_list"))
@@ -454,7 +536,62 @@ def get_word_api(word):
         "word": word,
         "formatted_result": result_data["formatted"],
         "structured_data": result_data["structured"],
+        "audio_path": result_data.get("audio_path"),
     }
+
+
+@app.route("/api/generate-audio/<word>")
+def generate_audio_api(word):
+    """Generate or get existing audio for a word"""
+    try:
+        # Find word in history
+        history = get_history()
+        for item in history:
+            if item["word"].lower() == word.lower():
+                result = item.get("result", {})
+
+                # If audio already exists, return it
+                if result.get("audio_path"):
+                    return jsonify(
+                        {
+                            "success": True,
+                            "audio_path": result["audio_path"],
+                            "word": word,
+                        }
+                    )
+
+                # Generate new audio if structured data exists
+                if result.get("structured") and result["structured"].get(
+                    "vietnamese_meaning"
+                ):
+                    vietnamese_meaning = result["structured"]["vietnamese_meaning"]
+                    audio_path = tts_service.generate_audio(word, vietnamese_meaning)
+                    if audio_path:
+                        # Update history with audio path
+                        result["audio_path"] = audio_path
+                        result["audio_text"] = f"{word}. {vietnamese_meaning}."
+
+                        # Save updated history
+                        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                            json.dump(history, f, ensure_ascii=False, indent=2)
+
+                        return jsonify(
+                            {"success": True, "audio_path": audio_path, "word": word}
+                        )
+
+        return jsonify(
+            {"success": False, "message": "Word not found or cannot generate audio"}
+        )
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+
+# Serve static files
+@app.route("/static/audio/<filename>")
+def serve_audio(filename):
+    """Serve audio files"""
+    return send_from_directory("static/audio", filename)
 
 
 if __name__ == "__main__":
