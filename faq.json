@@ -1,0 +1,42 @@
+[
+  {
+    "question": "Làm thế nào để sử dụng hệ thống thẻ ghi nhớ?",
+    "answer": "Để sử dụng hệ thống thẻ ghi nhớ, bạn chỉ cần mở ứng dụng và bắt đầu ôn tập các thẻ. Bạn có thể lật thẻ để xem đáp án và đánh dấu là đã biết hoặc chưa biết."
+  },
+  {
+    "question": "Làm sao để thêm từ vựng mới vào thẻ ghi nhớ?",
+    "answer": "Vào mục thêm từ vựng, nhập từ mới và nghĩa của nó, sau đó lưu lại để thêm thẻ mới."
+  },
+  {
+    "question": "Làm thế nào để ôn tập hoặc luyện tập từ vựng với thẻ ghi nhớ?",
+    "answer": "Chọn chức năng ôn tập để xem lại các thẻ ghi nhớ của bạn. Bạn có thể tự kiểm tra bằng cách cố gắng nhớ nghĩa trước khi lật thẻ."
+  },
+  {
+    "question": "Tôi có thể chỉnh sửa hoặc xóa thẻ ghi nhớ đã có không?",
+    "answer": "Có, bạn có thể chỉnh sửa hoặc xóa thẻ ghi nhớ trong danh sách hoặc mục quản lý của ứng dụng."
+  },
+  {
+    "question": "Làm sao để theo dõi tiến trình hoặc lịch sử học với thẻ ghi nhớ?",
+    "answer": "Tiến trình và lịch sử học của bạn sẽ được tự động lưu lại và có thể xem trong mục lịch sử."
+  },
+  {
+    "question": "Có cách nào để nghe phát âm từ vựng không?",
+    "answer": "Có, hãy nhấn vào biểu tượng âm thanh trên thẻ ghi nhớ để nghe phát âm của từ."
+  },
+  {
+    "question": "Làm thế nào để đặt lại hoặc xóa lịch sử thẻ ghi nhớ?",
+    "answer": "Vào mục lịch sử và chọn chức năng xóa hoặc đặt lại tiến trình học của bạn."
+  },
+  {
+    "question": "Tôi có thể nhập hoặc xuất dữ liệu thẻ ghi nhớ không?",
+    "answer": "Hiện tại, chức năng nhập và xuất dữ liệu thẻ ghi nhớ chưa được hỗ trợ. Các bản cập nhật sau có thể sẽ bổ sung tính năng này."
+  },
+  {
+    "question": "Làm sao để tìm kiếm một từ vựng cụ thể trong thẻ ghi nhớ?",
+    "answer": "Sử dụng thanh tìm kiếm ở đầu danh sách thẻ ghi nhớ để tìm từ bạn muốn."
+  },
+  {
+    "question": "Tôi nên làm gì nếu gặp sự cố hoặc lỗi trong hệ thống thẻ ghi nhớ?",
+    "answer": "Nếu bạn gặp sự cố, vui lòng liên hệ bộ phận hỗ trợ hoặc gửi phản hồi qua chức năng góp ý trong ứng dụng."
+  }
+]

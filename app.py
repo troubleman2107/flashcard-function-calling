@@ -1,3 +1,9 @@
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
+from langchain_community.vectorstores import Chroma
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
+import chromadb
+
 from flask import (
     Flask,
     render_template,
@@ -420,6 +426,102 @@ def analyze_text_for_vocabulary(text):
         print(f"Error in analyze_text_for_vocabulary: {e}")
         return []
 
+# FAQ RAG setup
+FAQ_FILE = "faq.json"
+CHROMA_PERSIST_DIR = "chroma_db"
+COLLECTION_NAME = "faq_collection"
+
+def load_faq_documents():
+    with open(FAQ_FILE, "r", encoding="utf-8") as f:
+        faq_data = json.load(f)
+    docs = [
+        Document(
+            page_content=faq["question"] + " " + faq["answer"],
+            metadata={"question": faq["question"], "answer": faq["answer"]}
+        )
+        for faq in faq_data
+    ]
+    return docs
+
+def setup_faq_vectorstore():
+    # Initialize embeddings
+    embeddings = AzureOpenAIEmbeddings(
+        api_version="2023-05-15",
+        azure_endpoint=os.getenv("AZURE_OPENAI_EMBEDDING_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_EMBEDDING_API_KEY"),
+        model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
+    )
+    
+    # Create Chroma client
+    client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIR)
+    
+    # Load documents
+    docs = load_faq_documents()
+    
+    # Create or get existing vectorstore
+    vectorstore = Chroma(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embedding_function=embeddings,
+        persist_directory=CHROMA_PERSIST_DIR
+    )
+    
+    # Add documents if collection is empty
+    if len(vectorstore.get()['ids']) == 0:
+        vectorstore.add_documents(docs)
+        vectorstore.persist()
+    
+    return vectorstore
+
+# Only initialize once
+faq_vectorstore = None
+def get_faq_vectorstore():
+    global faq_vectorstore
+    if faq_vectorstore is None:
+        faq_vectorstore = setup_faq_vectorstore()
+    return faq_vectorstore
+
+
+def rag_faq_answer(query):
+    vs = get_faq_vectorstore()
+    docs = vs.similarity_search(query, k=2)
+    
+    if not docs:
+        return "Sorry, I couldn't find an answer."
+        
+    # Initialize Azure OpenAI Chat model
+    llm = AzureChatOpenAI(
+        openai_api_version="2023-05-15",
+        azure_deployment=os.getenv("AZURE_OPENAI_LLM_MODEL"),
+        deployment_name=os.getenv("AZURE_OPENAI_LLM_MODEL"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_LLM_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_LLM_API_KEY")
+    )
+    
+    # Prepare context from retrieved documents
+    context = "\n\n".join([doc.page_content for doc in docs])
+    
+    # Create prompt template
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant that answers questions about the flash card system."),
+        ("human", """Based on the following context, please answer the question. 
+                     If you cannot find a relevant answer in the context, say so.
+                     
+                     Context: {context}
+                     
+                     Question: {question}""")
+    ])
+    
+    # Create and invoke chain
+    chain = prompt | llm
+    
+    # Get response
+    response = chain.invoke({
+        "context": context,
+        "question": query
+    })
+    
+    return response.content
 
 # Routes
 @app.route("/", methods=["GET", "POST"])
@@ -593,6 +695,20 @@ def serve_audio(filename):
     """Serve audio files"""
     return send_from_directory("static/audio", filename)
 
+# FAQ page
+@app.route("/faq")
+def faq_page():
+    return render_template("faq.html")
+
+# FAQ API
+@app.route("/api/faq", methods=["POST"])
+def faq_api():
+    data = request.get_json()
+    question = data.get("question", "")
+    if not question:
+        return jsonify({"success": False, "answer": "No question provided."})
+    answer = rag_faq_answer(question)
+    return jsonify({"success": True, "answer": answer})
 
 if __name__ == "__main__":
     app.run(debug=True)
