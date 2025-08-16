@@ -92,16 +92,17 @@ class VocabularyManager:
     def __init__(self, persist_directory="./chroma_db"):
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection = self.client.get_or_create_collection(
-            name="vocabulary",
-            metadata={"hnsw:space": "cosine"}
+            name="vocabulary", metadata={"hnsw:space": "cosine"}
         )
-        
-    def classify_category(self, word, vietnamese_meaning, part_of_speech, example_sentences):
+
+    def classify_category(
+        self, word, vietnamese_meaning, part_of_speech, example_sentences
+    ):
         """Phân loại category cho từ vựng dựa trên AI"""
         try:
             # Tạo context để phân loại
             context = f"Word: {word}\nMeaning: {vietnamese_meaning}\nPart of speech: {part_of_speech}\nExamples: {' '.join(example_sentences)}"
-            
+
             messages = [
                 {
                     "role": "system",
@@ -123,14 +124,14 @@ class VocabularyManager:
                 max_tokens=20,
                 temperature=0.1,
             )
-            
+
             category = response.choices[0].message.content.strip()
             return category
-            
+
         except Exception as e:
             print(f"Error classifying category: {e}")
             return "General"
-    
+
     def add_vocabulary(self, word_data):
         """Thêm từ vựng vào ChromaDB với category tự động"""
         try:
@@ -138,13 +139,15 @@ class VocabularyManager:
             vietnamese_meaning = word_data.get("vietnamese_meaning", "")
             part_of_speech = word_data.get("part_of_speech", "")
             example_sentences = word_data.get("example_sentences", [])
-            
+
             # Phân loại category tự động
-            category = self.classify_category(word, vietnamese_meaning, part_of_speech, example_sentences)
-            
+            category = self.classify_category(
+                word, vietnamese_meaning, part_of_speech, example_sentences
+            )
+
             # Tạo document text để embedding
             document_text = f"{word} {vietnamese_meaning} {part_of_speech} {' '.join(example_sentences)}"
-            
+
             # Tạo metadata
             metadata = {
                 "word": word,
@@ -155,102 +158,126 @@ class VocabularyManager:
                 "phonetic": word_data.get("phonetic", ""),
                 "synonyms": ",".join(word_data.get("synonyms", [])),
                 "mnemonic_tip": word_data.get("mnemonic_tip", ""),
-                "example_sentences": "|".join(example_sentences)
+                "example_sentences": "|".join(example_sentences),
             }
-            
+
             # Thêm vào collection
             self.collection.add(
                 documents=[document_text],
                 metadatas=[metadata],
-                ids=[f"word_{word.lower()}_{int(time.time())}"]
+                ids=[f"word_{word.lower()}_{int(time.time())}"],
             )
-            
+
             print(f"Added word '{word}' to category '{category}'")
             return category
-            
+
         except Exception as e:
             print(f"Error adding vocabulary to ChromaDB: {e}")
             return None
-    
+
     # def search_by_topic(self, topic, limit=10, similarity_threshold=0.5):
     #     """Tìm kiếm từ vựng theo chủ đề - ĐÃ XÓA"""
     #     return []
-    
+
     def search_by_category(self, category, limit=50):
         """Tìm kiếm từ vựng theo category cụ thể - DEPRECATED, sử dụng semantic_search thay thế"""
         try:
             # Lấy tất cả dữ liệu
             all_data = self.collection.get(include=["metadatas"])
             results = []
-            
+
             if all_data["metadatas"]:
                 for metadata in all_data["metadatas"]:
                     if metadata.get("category", "General").lower() == category.lower():
-                        results.append({
-                            "word": metadata["word"],
-                            "vietnamese_meaning": metadata["vietnamese_meaning"],
-                            "category": metadata["category"],
-                            "part_of_speech": metadata["part_of_speech"],
-                            "example_sentences": metadata["example_sentences"].split("|"),
-                            "mnemonic_tip": metadata["mnemonic_tip"],
-                            "phonetic": metadata["phonetic"],
-                            "synonyms": metadata["synonyms"].split(",") if metadata["synonyms"] else [],
-                            "difficulty_level": metadata.get("difficulty_level", "intermediate")
-                        })
-                        
+                        results.append(
+                            {
+                                "word": metadata["word"],
+                                "vietnamese_meaning": metadata["vietnamese_meaning"],
+                                "category": metadata["category"],
+                                "part_of_speech": metadata["part_of_speech"],
+                                "example_sentences": metadata[
+                                    "example_sentences"
+                                ].split("|"),
+                                "mnemonic_tip": metadata["mnemonic_tip"],
+                                "phonetic": metadata["phonetic"],
+                                "synonyms": (
+                                    metadata["synonyms"].split(",")
+                                    if metadata["synonyms"]
+                                    else []
+                                ),
+                                "difficulty_level": metadata.get(
+                                    "difficulty_level", "intermediate"
+                                ),
+                            }
+                        )
+
                         if len(results) >= limit:
                             break
-            
+
             return results
-            
+
         except Exception as e:
             print(f"Error searching by category: {e}")
             return []
-    
+
     def semantic_search(self, query, limit=10, similarity_threshold=0.3):
         """Tìm kiếm từ vựng bằng semantic search dựa trên vector embeddings"""
         try:
             # Tạo query text phong phú hơn để tìm kiếm semantic
             enhanced_query = self._enhance_search_query(query)
-            
+
             # Thực hiện semantic search với ChromaDB
             results = self.collection.query(
                 query_texts=[enhanced_query],
                 n_results=limit,
-                include=["metadatas", "distances", "documents"]
+                include=["metadatas", "distances", "documents"],
             )
-            
+
             formatted_results = []
             if results["metadatas"] and results["metadatas"][0]:
                 for i, metadata in enumerate(results["metadatas"][0]):
                     # Kiểm tra similarity threshold
                     distance = results["distances"][0][i] if results["distances"] else 0
-                    similarity = 1 - distance  # ChromaDB trả về distance, chuyển thành similarity
-                    
+                    similarity = (
+                        1 - distance
+                    )  # ChromaDB trả về distance, chuyển thành similarity
+
                     if similarity >= similarity_threshold:
-                        formatted_results.append({
-                            "word": metadata["word"],
-                            "vietnamese_meaning": metadata["vietnamese_meaning"],
-                            "category": metadata["category"],
-                            "part_of_speech": metadata["part_of_speech"],
-                            "example_sentences": metadata["example_sentences"].split("|"),
-                            "mnemonic_tip": metadata["mnemonic_tip"],
-                            "phonetic": metadata["phonetic"],
-                            "synonyms": metadata["synonyms"].split(",") if metadata["synonyms"] else [],
-                            "difficulty_level": metadata.get("difficulty_level", "intermediate"),
-                            "similarity_score": round(similarity, 3)
-                        })
-            
+                        formatted_results.append(
+                            {
+                                "word": metadata["word"],
+                                "vietnamese_meaning": metadata["vietnamese_meaning"],
+                                "category": metadata["category"],
+                                "part_of_speech": metadata["part_of_speech"],
+                                "example_sentences": metadata[
+                                    "example_sentences"
+                                ].split("|"),
+                                "mnemonic_tip": metadata["mnemonic_tip"],
+                                "phonetic": metadata["phonetic"],
+                                "synonyms": (
+                                    metadata["synonyms"].split(",")
+                                    if metadata["synonyms"]
+                                    else []
+                                ),
+                                "difficulty_level": metadata.get(
+                                    "difficulty_level", "intermediate"
+                                ),
+                                "similarity_score": round(similarity, 3),
+                            }
+                        )
+
             # Sắp xếp theo similarity score giảm dần
             formatted_results.sort(key=lambda x: x["similarity_score"], reverse=True)
-            
-            print(f"Semantic search for '{query}' found {len(formatted_results)} results")
+
+            print(
+                f"Semantic search for '{query}' found {len(formatted_results)} results"
+            )
             return formatted_results
-            
+
         except Exception as e:
             print(f"Error in semantic search: {e}")
             return []
-    
+
     def _enhance_search_query(self, query):
         """Tăng cường query để semantic search hiệu quả hơn"""
         # Mapping các từ khóa tiếng Việt sang tiếng Anh và mở rộng ngữ cảnh
@@ -274,67 +301,69 @@ class VocabularyManager:
             "động vật": "animals pets wildlife creatures living beings",
             "giao thông": "transportation vehicle car bus train plane travel",
             "quần áo": "clothing clothes fashion wear dress shirt pants",
-            "thời tiết": "weather climate rain sun snow wind temperature"
+            "thời tiết": "weather climate rain sun snow wind temperature",
         }
-        
+
         # Tìm mapping phù hợp
         query_lower = query.lower()
         for vietnamese_term, english_expansion in query_mappings.items():
             if vietnamese_term in query_lower:
                 return f"{query} {english_expansion}"
-        
+
         # Nếu không tìm thấy mapping, trả về query gốc với một số từ khóa chung
         return f"{query} vocabulary words language learning"
-    
+
     def delete_vocabulary(self, word):
         """Xóa từ vựng khỏi ChromaDB"""
         try:
             # Lấy tất cả dữ liệu để tìm IDs của từ cần xóa
             all_data = self.collection.get(include=["metadatas"])
             ids_to_delete = []
-            
+
             if all_data["metadatas"]:
                 for i, metadata in enumerate(all_data["metadatas"]):
                     if metadata.get("word", "").lower() == word.lower():
                         # Lấy ID tương ứng
                         if i < len(all_data["ids"]):
                             ids_to_delete.append(all_data["ids"][i])
-            
+
             # Xóa các IDs tìm được
             if ids_to_delete:
                 self.collection.delete(ids=ids_to_delete)
-                print(f"Deleted {len(ids_to_delete)} entries for word '{word}' from ChromaDB")
+                print(
+                    f"Deleted {len(ids_to_delete)} entries for word '{word}' from ChromaDB"
+                )
                 return len(ids_to_delete)
             else:
                 print(f"Word '{word}' not found in ChromaDB")
                 return 0
-                
+
         except Exception as e:
             print(f"Error deleting vocabulary from ChromaDB: {e}")
             return 0
-    
+
     def word_exists(self, word):
         """Kiểm tra xem từ vựng đã tồn tại trong ChromaDB chưa"""
         try:
             # Lấy tất cả metadata
             all_data = self.collection.get(include=["metadatas"])
-            
+
             if all_data["metadatas"]:
                 for metadata in all_data["metadatas"]:
                     if metadata.get("word", "").lower() == word.lower():
                         return True
             return False
-                
+
         except Exception as e:
             print(f"Error checking word existence: {e}")
             return False
-    
+
     def clear_all_data(self):
         """Xóa toàn bộ dữ liệu trong ChromaDB"""
         try:
             # Lấy tất cả IDs
             all_data = self.collection.get(include=["metadatas"])
-            
+
             if all_data["ids"]:
                 # Xóa tất cả
                 self.collection.delete(ids=all_data["ids"])
@@ -344,25 +373,25 @@ class VocabularyManager:
             else:
                 print("No data found in ChromaDB to delete")
                 return 0
-                
+
         except Exception as e:
             print(f"Error clearing ChromaDB: {e}")
             return 0
-    
+
     def get_categories_stats(self):
         """Lấy thống kê các category"""
         try:
             # Lấy tất cả metadata
             all_data = self.collection.get(include=["metadatas"])
             categories = {}
-            
+
             if all_data["metadatas"]:
                 for metadata in all_data["metadatas"]:
                     category = metadata.get("category", "General")
                     categories[category] = categories.get(category, 0) + 1
-            
+
             return categories
-            
+
         except Exception as e:
             print(f"Error getting categories stats: {e}")
             return {}
@@ -524,13 +553,13 @@ SEMANTIC_VOCABULARY_SEARCH_FUNCTION = {
                 "limit": {
                     "type": "integer",
                     "description": "Số lượng từ vựng tối đa cần trả về (mặc định 10)",
-                    "default": 10
+                    "default": 10,
                 },
                 "similarity_threshold": {
                     "type": "number",
                     "description": "Ngưỡng độ tương đồng tối thiểu (0.0-1.0, mặc định 0.3)",
-                    "default": 0.3
-                }
+                    "default": 0.3,
+                },
             },
             "required": ["query"],
         },
@@ -543,11 +572,11 @@ def save_to_history(word, result):
     # Kiểm tra duplicate trước khi lưu
     chromadb_exists = vocab_manager.word_exists(word)
     history_exists = word_exists_in_history(word)
-    
+
     if chromadb_exists and history_exists:
         print(f"Word '{word}' already exists in both ChromaDB and history. Skipping...")
         return False
-    
+
     history_data = []
     if os.path.exists(HISTORY_FILE):
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -563,7 +592,7 @@ def save_to_history(word, result):
         if audio_path:
             result["audio_path"] = audio_path
             result["audio_text"] = f"{word}. {vietnamese_meaning}."
-        
+
         # Thêm vào ChromaDB với phân loại tự động (chỉ khi chưa tồn tại)
         if not chromadb_exists:
             try:
@@ -574,7 +603,9 @@ def save_to_history(word, result):
             except Exception as e:
                 print(f"Error adding to ChromaDB: {e}")
         else:
-            print(f"Word '{word}' already exists in ChromaDB. Skipping ChromaDB insertion...")
+            print(
+                f"Word '{word}' already exists in ChromaDB. Skipping ChromaDB insertion..."
+            )
 
     # Thêm vào history.json (chỉ khi chưa tồn tại)
     if not history_exists:
@@ -583,8 +614,10 @@ def save_to_history(word, result):
             json.dump(history_data, f, ensure_ascii=False, indent=2)
         print(f"Word '{word}' added to history.json")
     else:
-        print(f"Word '{word}' already exists in history.json. Skipping history insertion...")
-    
+        print(
+            f"Word '{word}' already exists in history.json. Skipping history insertion..."
+        )
+
     return True
 
 
@@ -613,13 +646,13 @@ def clear_all_data():
     try:
         # Xóa ChromaDB
         chromadb_deleted = vocab_manager.clear_all_data()
-        
+
         # Xóa history.json
         history_deleted = 0
         if os.path.exists(HISTORY_FILE):
             history_data = get_history()
             history_deleted = len(history_data)
-            
+
             # Xóa tất cả file audio
             for item in history_data:
                 if "result" in item and "audio_path" in item["result"]:
@@ -631,14 +664,16 @@ def clear_all_data():
                             print(f"Deleted audio file: {file_path}")
                         except Exception as e:
                             print(f"Error deleting audio file: {e}")
-            
+
             # Xóa history.json
             with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
-        
-        print(f"Cleared all data: {chromadb_deleted} from ChromaDB, {history_deleted} from history")
+
+        print(
+            f"Cleared all data: {chromadb_deleted} from ChromaDB, {history_deleted} from history"
+        )
         return chromadb_deleted, history_deleted
-        
+
     except Exception as e:
         print(f"Error clearing all data: {e}")
         return 0, 0
@@ -650,15 +685,17 @@ def delete_flashcard(index):
         # Get the word to delete
         deleted_item = history_data[index]
         word_to_delete = deleted_item.get("word", "")
-        
+
         # Delete from ChromaDB first
         if word_to_delete:
             try:
                 deleted_count = vocab_manager.delete_vocabulary(word_to_delete)
-                print(f"Deleted {deleted_count} entries for '{word_to_delete}' from ChromaDB")
+                print(
+                    f"Deleted {deleted_count} entries for '{word_to_delete}' from ChromaDB"
+                )
             except Exception as e:
                 print(f"Error deleting from ChromaDB: {e}")
-        
+
         # Delete associated audio file if it exists
         if "result" in deleted_item and "audio_path" in deleted_item["result"]:
             audio_path = deleted_item["result"]["audio_path"]
@@ -681,46 +718,50 @@ def semantic_search_vocabulary_function(query, limit=10, similarity_threshold=0.
     """Function để tìm kiếm từ vựng bằng semantic search cho function calling"""
     try:
         # Tìm kiếm bằng semantic search
-        results = vocab_manager.semantic_search(query, limit=limit, similarity_threshold=similarity_threshold)
-        
+        results = vocab_manager.semantic_search(
+            query, limit=limit, similarity_threshold=similarity_threshold
+        )
+
         if not results:
             return {
                 "success": False,
                 "message": f"Không tìm thấy từ vựng nào liên quan đến '{query}'",
                 "query": query,
-                "results": []
+                "results": [],
             }
-        
+
         # Format kết quả cho function calling
         formatted_results = []
         for word_data in results:
-            formatted_results.append({
-                "word": word_data["word"],
-                "vietnamese_meaning": word_data["vietnamese_meaning"],
-                "part_of_speech": word_data["part_of_speech"],
-                "phonetic": word_data["phonetic"],
-                "example_sentences": word_data["example_sentences"],
-                "mnemonic_tip": word_data["mnemonic_tip"],
-                "difficulty_level": word_data["difficulty_level"],
-                "synonyms": word_data["synonyms"],
-                "category": word_data["category"],
-                "similarity_score": word_data["similarity_score"]
-            })
-        
+            formatted_results.append(
+                {
+                    "word": word_data["word"],
+                    "vietnamese_meaning": word_data["vietnamese_meaning"],
+                    "part_of_speech": word_data["part_of_speech"],
+                    "phonetic": word_data["phonetic"],
+                    "example_sentences": word_data["example_sentences"],
+                    "mnemonic_tip": word_data["mnemonic_tip"],
+                    "difficulty_level": word_data["difficulty_level"],
+                    "synonyms": word_data["synonyms"],
+                    "category": word_data["category"],
+                    "similarity_score": word_data["similarity_score"],
+                }
+            )
+
         return {
             "success": True,
             "message": f"Tìm thấy {len(results)} từ vựng liên quan đến '{query}'",
             "query": query,
             "results": formatted_results,
-            "count": len(results)
+            "count": len(results),
         }
-        
+
     except Exception as e:
         return {
             "success": False,
             "message": f"Lỗi tìm kiếm: {str(e)}",
             "query": query,
-            "results": []
+            "results": [],
         }
 
 
@@ -867,6 +908,153 @@ def analyze_text_for_vocabulary(text):
         return []
 
 
+def extract_word_from_input(user_input):
+    """
+    Extract the actual English word from user input phrases like:
+    - "help me add world hello" -> "hello"
+    - "giúp tôi thêm từ hello" -> "hello"
+    - "add word computer" -> "computer"
+    - "thêm từ computer" -> "computer"
+    - "hello" -> "hello" (direct word)
+    """
+    # Remove common phrases and extract the word
+    user_input = user_input.lower().strip()
+
+    # Common English phrases to remove
+    english_phrases = [
+        "help me add world",
+        "help me add word",
+        "add world",
+        "add word",
+        "please add",
+        "can you add",
+        "i want to add",
+        "add the word",
+        "add this word",
+        "add word",
+        "add world",
+        "add vocabulary",
+        "help me add",
+        "please help me add",
+        "can you help me add",
+        "i need to add",
+        "i would like to add",
+        "add the vocabulary",
+        "add this vocabulary",
+        "add new word",
+        "add new vocabulary",
+    ]
+
+    # Common Vietnamese phrases to remove
+    vietnamese_phrases = [
+        "giúp tôi thêm từ",
+        "giúp tôi thêm",
+        "thêm từ",
+        "thêm từ vựng",
+        "tôi muốn thêm từ",
+        "hãy thêm từ",
+        "thêm từ này",
+        "thêm từ đó",
+        "thêm từ tiếng anh",
+        "thêm từ mới",
+        "giúp tôi thêm từ vựng",
+        "tôi cần thêm từ",
+        "bạn có thể thêm từ",
+        "hãy giúp tôi thêm từ",
+        "thêm từ vựng mới",
+        "thêm từ này vào",
+        "thêm từ đó vào",
+    ]
+
+    # Remove all common phrases
+    for phrase in english_phrases + vietnamese_phrases:
+        user_input = user_input.replace(phrase, "").strip()
+
+    # Clean up extra spaces and punctuation
+    user_input = re.sub(r"\s+", " ", user_input).strip()
+    user_input = re.sub(r"[^\w\s]", "", user_input).strip()
+
+    # If we still have multiple words, try to find the most likely English word
+    words = user_input.split()
+
+    if len(words) == 1:
+        return words[0]
+    elif len(words) > 1:
+        # Look for the most likely English word (usually the last meaningful word)
+        # Filter out common filler words
+        filler_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "can",
+            "this",
+            "that",
+            "these",
+            "those",
+            "me",
+            "you",
+            "he",
+            "she",
+            "it",
+            "we",
+            "they",
+            "my",
+            "your",
+            "his",
+            "her",
+            "its",
+            "our",
+            "their",
+            "mine",
+            "yours",
+            "hers",
+            "ours",
+            "theirs",
+        }
+
+        # Remove filler words and get the last meaningful word
+        meaningful_words = [word for word in words if word.lower() not in filler_words]
+
+        if meaningful_words:
+            # Prefer longer words as they're more likely to be vocabulary words
+            meaningful_words.sort(key=len, reverse=True)
+            return meaningful_words[0]  # Return the longest meaningful word
+        else:
+            return words[-1]  # If no meaningful words found, return the last word
+
+    return user_input
+
+
 # Routes
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -904,52 +1092,62 @@ def chat_api():
 
     try:
         if chat_type == "word":
-            result_data = explain_word(message)
+            # Extract the word from the user's input
+            word_to_analyze = extract_word_from_input(message)
+            print(f"User input: '{message}' -> Extracted word: '{word_to_analyze}'")
+
+            result_data = explain_word(word_to_analyze)
             if result_data["structured"]:
                 # Kiểm tra duplicate trước khi lưu
-                chromadb_exists = vocab_manager.word_exists(message)
-                history_exists = word_exists_in_history(message)
-                
+                chromadb_exists = vocab_manager.word_exists(word_to_analyze)
+                history_exists = word_exists_in_history(word_to_analyze)
+
                 if chromadb_exists and history_exists:
                     return jsonify(
                         {
                             "success": False,
-                            "message": f"⚠️ Từ '{message}' đã tồn tại trong flashcard!",
+                            "message": f"⚠️ Từ '{word_to_analyze}' đã tồn tại trong flashcard!",
                             "result": result_data["formatted"],
                             "structured_data": result_data["structured"],
                             "type": "word",
-                            "duplicate": True
+                            "duplicate": True,
                         }
                     )
-                
-                saved = save_to_history(message, result_data)
+
+                saved = save_to_history(word_to_analyze, result_data)
                 if saved:
                     return jsonify(
                         {
                             "success": True,
-                            "message": f"✅ Đã thêm từ '{message}' vào flashcard!",
+                            "message": f"✅ Đã thêm từ '{word_to_analyze}' vào flashcard!",
                             "result": result_data["formatted"],
                             "structured_data": result_data["structured"],
                             "audio_path": result_data.get("audio_path"),
                             "type": "word",
+                            "extracted_word": word_to_analyze,
+                            "original_input": message,
                         }
                     )
                 else:
                     return jsonify(
                         {
                             "success": False,
-                            "message": f"⚠️ Từ '{message}' đã tồn tại trong flashcard!",
+                            "message": f"⚠️ Từ '{word_to_analyze}' đã tồn tại trong flashcard!",
                             "result": result_data["formatted"],
                             "structured_data": result_data["structured"],
                             "type": "word",
-                            "duplicate": True
+                            "duplicate": True,
+                            "extracted_word": word_to_analyze,
+                            "original_input": message,
                         }
                     )
             else:
                 return jsonify(
                     {
                         "success": False,
-                        "message": f"❌ Không thể phân tích từ '{message}'",
+                        "message": f"❌ Không thể phân tích từ '{word_to_analyze}'",
+                        "extracted_word": word_to_analyze,
+                        "original_input": message,
                     }
                 )
 
@@ -1026,45 +1224,59 @@ def semantic_search_api():
                 query = function_args.get("query", "")
                 limit = function_args.get("limit", 10)
                 similarity_threshold = function_args.get("similarity_threshold", 0.3)
-                
+
                 # Gọi function semantic search
-                search_result = semantic_search_vocabulary_function(query, limit, similarity_threshold)
-                
+                search_result = semantic_search_vocabulary_function(
+                    query, limit, similarity_threshold
+                )
+
                 if search_result["success"]:
                     # Format kết quả để hiển thị với similarity scores
                     formatted_response = f"🔍 **Tìm thấy {search_result['count']} từ vựng liên quan đến '{query}' (Semantic Search):**\n\n"
-                    
+
                     for i, word_data in enumerate(search_result["results"], 1):
-                        similarity_emoji = "🎯" if word_data['similarity_score'] >= 0.7 else "📍" if word_data['similarity_score'] >= 0.5 else "📌"
+                        similarity_emoji = (
+                            "🎯"
+                            if word_data["similarity_score"] >= 0.7
+                            else "📍" if word_data["similarity_score"] >= 0.5 else "📌"
+                        )
                         formatted_response += f"**{i}. {word_data['word'].upper()}** /{word_data['phonetic']}/ ({word_data['part_of_speech']}) {similarity_emoji} {word_data['similarity_score']}\n"
-                        formatted_response += f"   📝 {word_data['vietnamese_meaning']}\n"
-                        formatted_response += f"   🏷️ Category: {word_data['category']}\n"
-                        if word_data['example_sentences']:
-                            formatted_response += f"   💡 Ví dụ: {word_data['example_sentences'][0]}\n"
+                        formatted_response += (
+                            f"   📝 {word_data['vietnamese_meaning']}\n"
+                        )
+                        formatted_response += (
+                            f"   🏷️ Category: {word_data['category']}\n"
+                        )
+                        if word_data["example_sentences"]:
+                            formatted_response += (
+                                f"   💡 Ví dụ: {word_data['example_sentences'][0]}\n"
+                            )
                         formatted_response += "\n"
-                    
-                    return jsonify({
-                        "success": True,
-                        "message": formatted_response,
-                        "type": "semantic_search",
-                        "query": query,
-                        "results": search_result["results"],
-                        "count": search_result["count"]
-                    })
+
+                    return jsonify(
+                        {
+                            "success": True,
+                            "message": formatted_response,
+                            "type": "semantic_search",
+                            "query": query,
+                            "results": search_result["results"],
+                            "count": search_result["count"],
+                        }
+                    )
                 else:
-                    return jsonify({
-                        "success": False,
-                        "message": search_result["message"],
-                        "type": "semantic_search"
-                    })
+                    return jsonify(
+                        {
+                            "success": False,
+                            "message": search_result["message"],
+                            "type": "semantic_search",
+                        }
+                    )
         else:
             # Không có function call, trả lời bình thường
             ai_response = response.choices[0].message.content
-            return jsonify({
-                "success": True,
-                "message": ai_response,
-                "type": "general_chat"
-            })
+            return jsonify(
+                {"success": True, "message": ai_response, "type": "general_chat"}
+            )
 
     except Exception as e:
         return jsonify({"success": False, "message": f"❌ Đã xảy ra lỗi: {str(e)}"})
@@ -1093,35 +1305,42 @@ def delete_word_api():
     try:
         data = request.get_json()
         word = data.get("word", "").strip()
-        
+
         if not word:
-            return jsonify({"success": False, "message": "Vui lòng cung cấp tên từ cần xóa"})
-        
+            return jsonify(
+                {"success": False, "message": "Vui lòng cung cấp tên từ cần xóa"}
+            )
+
         # Xóa từ ChromaDB
         deleted_count = vocab_manager.delete_vocabulary(word)
-        
+
         # Xóa từ history.json
         history_data = get_history()
         original_count = len(history_data)
-        history_data = [item for item in history_data if item.get("word", "").lower() != word.lower()]
-        
+        history_data = [
+            item
+            for item in history_data
+            if item.get("word", "").lower() != word.lower()
+        ]
+
         if len(history_data) < original_count:
             with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                 json.dump(history_data, f, ensure_ascii=False, indent=2)
-        
+
         if deleted_count > 0 or len(history_data) < original_count:
-            return jsonify({
-                "success": True,
-                "message": f"Đã xóa từ '{word}' thành công",
-                "deleted_from_chromadb": deleted_count,
-                "deleted_from_history": original_count - len(history_data)
-            })
+            return jsonify(
+                {
+                    "success": True,
+                    "message": f"Đã xóa từ '{word}' thành công",
+                    "deleted_from_chromadb": deleted_count,
+                    "deleted_from_history": original_count - len(history_data),
+                }
+            )
         else:
-            return jsonify({
-                "success": False,
-                "message": f"Không tìm thấy từ '{word}' để xóa"
-            })
-            
+            return jsonify(
+                {"success": False, "message": f"Không tìm thấy từ '{word}' để xóa"}
+            )
+
     except Exception as e:
         return jsonify({"success": False, "message": f"Lỗi xóa từ vựng: {str(e)}"})
 
@@ -1133,26 +1352,32 @@ def clear_all_data_api():
         # Xác nhận từ client
         data = request.get_json()
         confirm = data.get("confirm", False)
-        
+
         if not confirm:
-            return jsonify({
-                "success": False, 
-                "message": "Vui lòng xác nhận bằng cách gửi 'confirm': true"
-            })
-        
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "Vui lòng xác nhận bằng cách gửi 'confirm': true",
+                }
+            )
+
         # Thực hiện xóa
         chromadb_deleted, history_deleted = clear_all_data()
-        
-        return jsonify({
-            "success": True,
-            "message": f"Đã xóa toàn bộ dữ liệu thành công",
-            "deleted_from_chromadb": chromadb_deleted,
-            "deleted_from_history": history_deleted,
-            "total_deleted": chromadb_deleted + history_deleted
-        })
-        
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Đã xóa toàn bộ dữ liệu thành công",
+                "deleted_from_chromadb": chromadb_deleted,
+                "deleted_from_history": history_deleted,
+                "total_deleted": chromadb_deleted + history_deleted,
+            }
+        )
+
     except Exception as e:
-        return jsonify({"success": False, "message": f"Lỗi xóa toàn bộ dữ liệu: {str(e)}"})
+        return jsonify(
+            {"success": False, "message": f"Lỗi xóa toàn bộ dữ liệu: {str(e)}"}
+        )
 
 
 @app.route("/api/word/<word>")
@@ -1180,27 +1405,31 @@ def search_by_category_api():
         data = request.get_json()
         category = data.get("category", "").strip()
         limit = data.get("limit", 50)
-        
+
         if not category:
             return jsonify({"success": False, "message": "Vui lòng chọn category"})
-        
+
         # Tìm kiếm trong ChromaDB theo category
         results = vocab_manager.search_by_category(category, limit=limit)
-        
+
         if results:
-            return jsonify({
-                "success": True,
-                "category": category,
-                "results": results,
-                "count": len(results),
-                "message": f"Tìm thấy {len(results)} từ vựng trong category '{category}'"
-            })
+            return jsonify(
+                {
+                    "success": True,
+                    "category": category,
+                    "results": results,
+                    "count": len(results),
+                    "message": f"Tìm thấy {len(results)} từ vựng trong category '{category}'",
+                }
+            )
         else:
-            return jsonify({
-                "success": False,
-                "message": f"Không tìm thấy từ vựng nào trong category '{category}'"
-            })
-            
+            return jsonify(
+                {
+                    "success": False,
+                    "message": f"Không tìm thấy từ vựng nào trong category '{category}'",
+                }
+            )
+
     except Exception as e:
         return jsonify({"success": False, "message": f"Lỗi tìm kiếm: {str(e)}"})
 
@@ -1210,11 +1439,13 @@ def get_categories_api():
     """API lấy thống kê các category"""
     try:
         categories = vocab_manager.get_categories_stats()
-        return jsonify({
-            "success": True,
-            "categories": categories,
-            "total_words": sum(categories.values())
-        })
+        return jsonify(
+            {
+                "success": True,
+                "categories": categories,
+                "total_words": sum(categories.values()),
+            }
+        )
     except Exception as e:
         return jsonify({"success": False, "message": f"Lỗi lấy thống kê: {str(e)}"})
 
