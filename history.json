@@ -1142,5 +1142,31 @@
       "audio_text": "concert. buổi hòa nhạc.",
       "category": "Entertainment"
     }
+  },
+  {
+    "word": "assistant",
+    "result": {
+      "formatted": "📚 **ASSISTANT** //əˈsɪstənt// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** trợ lý\n\n📝 **Ví dụ:**\n1. She works as an assistant in a busy office.\n2. The assistant helped the manager organize the event.\n\n🔄 **Từ đồng nghĩa:** aide, helper, supporter\n\n💡 **Mẹo học dễ nhớ:**\nThink of an 'assistant' as someone who 'assists' you.",
+      "structured": {
+        "word": "assistant",
+        "vietnamese_meaning": "trợ lý",
+        "part_of_speech": "noun",
+        "phonetic": "/əˈsɪstənt/",
+        "example_sentences": [
+          "She works as an assistant in a busy office.",
+          "The assistant helped the manager organize the event."
+        ],
+        "mnemonic_tip": "Think of an 'assistant' as someone who 'assists' you.",
+        "difficulty_level": "beginner",
+        "synonyms": [
+          "aide",
+          "helper",
+          "supporter"
+        ]
+      },
+      "audio_path": "/static/audio/assistant_f549cd73.wav",
+      "audio_text": "assistant. trợ lý.",
+      "category": "Business"
+    }
   }
 ]

@@ -20,12 +20,84 @@ from dotenv import load_dotenv
 import chromadb
 from chromadb.config import Settings
 
+# LangChain imports
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.tools import tool
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import create_openai_functions_agent, AgentExecutor
+from langchain.memory import ConversationBufferWindowMemory
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
 load_dotenv()
 
 app = Flask(__name__)
 
 
-# TTS Service Class
+# Pydantic models for structured output
+class VocabularyWord(BaseModel):
+    word: str = Field(
+        description="The English word being analyzed, fix this word if it is not a valid English word"
+    )
+    vietnamese_meaning: str = Field(description="The meaning of the word in Vietnamese")
+    part_of_speech: str = Field(
+        description="Part of speech (noun, verb, adjective, etc.)"
+    )
+    phonetic: Optional[str] = Field(description="Phonetic pronunciation of the word")
+    example_sentences: List[str] = Field(
+        description="Two example sentences using the word", min_items=2, max_items=2
+    )
+    mnemonic_tip: str = Field(
+        description="A memorable tip or mnemonic to help learn the word"
+    )
+    difficulty_level: str = Field(
+        description="Difficulty level of the word",
+        pattern="^(beginner|intermediate|advanced)$",
+    )
+    synonyms: List[str] = Field(description="List of synonyms (up to 3)", max_items=3)
+
+
+class VocabularyList(BaseModel):
+    vocabulary_list: List[VocabularyWord] = Field(
+        description="List of vocabulary words extracted from the text",
+        min_items=1,
+        max_items=10,
+    )
+
+
+class SemanticSearchResult(BaseModel):
+    success: bool
+    message: str
+    query: str
+    results: List[dict]
+    count: Optional[int] = 0
+
+
+# LangChain setup
+def setup_langchain():
+    """Initialize LangChain components"""
+    llm = ChatOpenAI(
+        openai_api_base=os.getenv("AZURE_OPENAI_LLM_ENDPOINT"),
+        openai_api_key=os.getenv("AZURE_OPENAI_LLM_API_KEY"),
+        model_name="GPT-4o-mini",
+        temperature=0.1,
+    )
+
+    # Memory for conversation context
+    memory = ConversationBufferWindowMemory(
+        memory_key="chat_history", return_messages=True, k=5  # Keep last 5 exchanges
+    )
+
+    return llm, memory
+
+
+# Initialize LangChain
+llm, memory = setup_langchain()
+
+
+# TTS Service Class (unchanged)
 class TTSService:
     def __init__(self):
         self.model = None
@@ -53,24 +125,18 @@ class TTSService:
             return None
 
         try:
-            # Create text for TTS (English word + Vietnamese meaning)
             tts_text = f"{word}"
-
-            # Generate unique filename based on content hash
             content_hash = hashlib.md5(tts_text.encode()).hexdigest()[:8]
             filename = f"{word}_{content_hash}.wav"
             filepath = os.path.join(self.audio_dir, filename)
 
-            # Check if file already exists
             if os.path.exists(filepath):
                 return f"/static/audio/{filename}"
 
-            # Generate audio
             inputs = self.tokenizer(tts_text, return_tensors="pt")
             with torch.no_grad():
                 output = self.model(**inputs).waveform
 
-            # Save audio file
             sf.write(
                 filepath, output.squeeze().numpy(), self.model.config.sampling_rate
             )
@@ -87,7 +153,7 @@ class TTSService:
 tts_service = TTSService()
 
 
-# Vocabulary Management with ChromaDB
+# Vocabulary Management with ChromaDB (enhanced with LangChain)
 class VocabularyManager:
     def __init__(self, persist_directory="./chroma_db"):
         self.client = chromadb.PersistentClient(path=persist_directory)
@@ -98,34 +164,29 @@ class VocabularyManager:
     def classify_category(
         self, word, vietnamese_meaning, part_of_speech, example_sentences
     ):
-        """Phân loại category cho từ vựng dựa trên AI"""
+        """Classify category using LangChain"""
         try:
-            # Tạo context để phân loại
             context = f"Word: {word}\nMeaning: {vietnamese_meaning}\nPart of speech: {part_of_speech}\nExamples: {' '.join(example_sentences)}"
 
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    (
+                        "system",
                         "You are a vocabulary categorization expert. "
                         "Classify the given English word into ONE of these categories: "
                         "Business, Technology, Education, Health, Travel, Food, Sports, "
                         "Entertainment, Science, Art, Nature, Family, Emotions, Time, "
                         "Colors, Numbers, Animals, Transportation, Clothing, Weather. "
-                        "Return ONLY the category name, nothing else."
+                        "Return ONLY the category name, nothing else.",
                     ),
-                },
-                {"role": "user", "content": f"Classify this word: {context}"},
-            ]
-
-            response = client.chat.completions.create(
-                model="GPT-4o-mini",
-                messages=messages,
-                max_tokens=20,
-                temperature=0.1,
+                    ("user", "Classify this word: {context}"),
+                ]
             )
 
-            category = response.choices[0].message.content.strip()
+            chain = prompt | llm
+            response = chain.invoke({"context": context})
+
+            category = response.content.strip()
             return category
 
         except Exception as e:
@@ -133,22 +194,19 @@ class VocabularyManager:
             return "General"
 
     def add_vocabulary(self, word_data):
-        """Thêm từ vựng vào ChromaDB với category tự động"""
+        """Add vocabulary to ChromaDB with automatic category"""
         try:
             word = word_data.get("word", "")
             vietnamese_meaning = word_data.get("vietnamese_meaning", "")
             part_of_speech = word_data.get("part_of_speech", "")
             example_sentences = word_data.get("example_sentences", [])
 
-            # Phân loại category tự động
             category = self.classify_category(
                 word, vietnamese_meaning, part_of_speech, example_sentences
             )
 
-            # Tạo document text để embedding
             document_text = f"{word} {vietnamese_meaning} {part_of_speech} {' '.join(example_sentences)}"
 
-            # Tạo metadata
             metadata = {
                 "word": word,
                 "vietnamese_meaning": vietnamese_meaning,
@@ -161,7 +219,6 @@ class VocabularyManager:
                 "example_sentences": "|".join(example_sentences),
             }
 
-            # Thêm vào collection
             self.collection.add(
                 documents=[document_text],
                 metadatas=[metadata],
@@ -175,14 +232,9 @@ class VocabularyManager:
             print(f"Error adding vocabulary to ChromaDB: {e}")
             return None
 
-    # def search_by_topic(self, topic, limit=10, similarity_threshold=0.5):
-    #     """Tìm kiếm từ vựng theo chủ đề - ĐÃ XÓA"""
-    #     return []
-
     def search_by_category(self, category, limit=50):
-        """Tìm kiếm từ vựng theo category cụ thể - DEPRECATED, sử dụng semantic_search thay thế"""
+        """Search vocabulary by specific category"""
         try:
-            # Lấy tất cả dữ liệu
             all_data = self.collection.get(include=["metadatas"])
             results = []
 
@@ -221,12 +273,10 @@ class VocabularyManager:
             return []
 
     def semantic_search(self, query, limit=10, similarity_threshold=0.3):
-        """Tìm kiếm từ vựng bằng semantic search dựa trên vector embeddings"""
+        """Semantic search with enhanced query processing using LangChain"""
         try:
-            # Tạo query text phong phú hơn để tìm kiếm semantic
             enhanced_query = self._enhance_search_query(query)
 
-            # Thực hiện semantic search với ChromaDB
             results = self.collection.query(
                 query_texts=[enhanced_query],
                 n_results=limit,
@@ -236,11 +286,8 @@ class VocabularyManager:
             formatted_results = []
             if results["metadatas"] and results["metadatas"][0]:
                 for i, metadata in enumerate(results["metadatas"][0]):
-                    # Kiểm tra similarity threshold
                     distance = results["distances"][0][i] if results["distances"] else 0
-                    similarity = (
-                        1 - distance
-                    )  # ChromaDB trả về distance, chuyển thành similarity
+                    similarity = 1 - distance
 
                     if similarity >= similarity_threshold:
                         formatted_results.append(
@@ -266,7 +313,6 @@ class VocabularyManager:
                             }
                         )
 
-            # Sắp xếp theo similarity score giảm dần
             formatted_results.sort(key=lambda x: x["similarity_score"], reverse=True)
 
             print(
@@ -279,55 +325,66 @@ class VocabularyManager:
             return []
 
     def _enhance_search_query(self, query):
-        """Tăng cường query để semantic search hiệu quả hơn"""
-        # Mapping các từ khóa tiếng Việt sang tiếng Anh và mở rộng ngữ cảnh
-        query_mappings = {
-            "du lịch": "travel vacation holiday trip journey tourism sightseeing adventure",
-            "công nghệ": "technology computer software programming internet digital tech innovation",
-            "ăn uống": "food eating drinking restaurant cooking meal cuisine nutrition",
-            "kinh doanh": "business work office company management finance economy",
-            "giáo dục": "education school learning study teaching knowledge academic",
-            "sức khỏe": "health medical doctor hospital medicine fitness wellness",
-            "thể thao": "sports exercise fitness game competition athletic physical",
-            "giải trí": "entertainment movie music fun leisure recreation hobby",
-            "khoa học": "science research experiment discovery scientific knowledge",
-            "nghệ thuật": "art creative painting drawing design artistic culture",
-            "thiên nhiên": "nature environment natural outdoor wildlife plants animals",
-            "gia đình": "family parents children relatives home domestic",
-            "cảm xúc": "emotions feelings mood happy sad angry love",
-            "thời gian": "time clock hour minute day week month year",
-            "màu sắc": "colors red blue green yellow black white colorful",
-            "số": "numbers counting mathematics numeric quantity amount",
-            "động vật": "animals pets wildlife creatures living beings",
-            "giao thông": "transportation vehicle car bus train plane travel",
-            "quần áo": "clothing clothes fashion wear dress shirt pants",
-            "thời tiết": "weather climate rain sun snow wind temperature",
-        }
+        """Enhanced search query using LangChain for better semantic understanding"""
+        try:
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    (
+                        "system",
+                        "You are a query enhancement expert. "
+                        "Given a search query in Vietnamese or English, expand it with related terms "
+                        "that would help find relevant vocabulary words. "
+                        "Focus on synonyms, related concepts, and contextual terms. "
+                        "Return the enhanced query as a single line of text.",
+                    ),
+                    (
+                        "user",
+                        "Enhance this search query for vocabulary search: {query}",
+                    ),
+                ]
+            )
 
-        # Tìm mapping phù hợp
-        query_lower = query.lower()
-        for vietnamese_term, english_expansion in query_mappings.items():
-            if vietnamese_term in query_lower:
-                return f"{query} {english_expansion}"
+            chain = prompt | llm
+            response = chain.invoke({"query": query})
 
-        # Nếu không tìm thấy mapping, trả về query gốc với một số từ khóa chung
-        return f"{query} vocabulary words language learning"
+            enhanced = response.content.strip()
+            return f"{query} {enhanced}"
+
+        except Exception as e:
+            print(f"Error enhancing query: {e}")
+            # Fallback to original method
+            query_mappings = {
+                "du lịch": "travel vacation holiday trip journey tourism sightseeing adventure",
+                "công nghệ": "technology computer software programming internet digital tech innovation",
+                "ăn uống": "food eating drinking restaurant cooking meal cuisine nutrition",
+                "kinh doanh": "business work office company management finance economy",
+                "giáo dục": "education school learning study teaching knowledge academic",
+                "sức khỏe": "health medical doctor hospital medicine fitness wellness",
+                "thể thao": "sports exercise fitness game competition athletic physical",
+                "giải trí": "entertainment movie music fun leisure recreation hobby",
+                "khoa học": "science research experiment discovery scientific knowledge",
+                "nghệ thuật": "art creative painting drawing design artistic culture",
+            }
+
+            query_lower = query.lower()
+            for vietnamese_term, english_expansion in query_mappings.items():
+                if vietnamese_term in query_lower:
+                    return f"{query} {english_expansion}"
+
+            return f"{query} vocabulary words language learning"
 
     def delete_vocabulary(self, word):
-        """Xóa từ vựng khỏi ChromaDB"""
+        """Delete vocabulary from ChromaDB"""
         try:
-            # Lấy tất cả dữ liệu để tìm IDs của từ cần xóa
             all_data = self.collection.get(include=["metadatas"])
             ids_to_delete = []
 
             if all_data["metadatas"]:
                 for i, metadata in enumerate(all_data["metadatas"]):
                     if metadata.get("word", "").lower() == word.lower():
-                        # Lấy ID tương ứng
                         if i < len(all_data["ids"]):
                             ids_to_delete.append(all_data["ids"][i])
 
-            # Xóa các IDs tìm được
             if ids_to_delete:
                 self.collection.delete(ids=ids_to_delete)
                 print(
@@ -343,9 +400,8 @@ class VocabularyManager:
             return 0
 
     def word_exists(self, word):
-        """Kiểm tra xem từ vựng đã tồn tại trong ChromaDB chưa"""
+        """Check if vocabulary word exists in ChromaDB"""
         try:
-            # Lấy tất cả metadata
             all_data = self.collection.get(include=["metadatas"])
 
             if all_data["metadatas"]:
@@ -359,13 +415,11 @@ class VocabularyManager:
             return False
 
     def clear_all_data(self):
-        """Xóa toàn bộ dữ liệu trong ChromaDB"""
+        """Clear all data from ChromaDB"""
         try:
-            # Lấy tất cả IDs
             all_data = self.collection.get(include=["metadatas"])
 
             if all_data["ids"]:
-                # Xóa tất cả
                 self.collection.delete(ids=all_data["ids"])
                 deleted_count = len(all_data["ids"])
                 print(f"Deleted {deleted_count} entries from ChromaDB")
@@ -379,9 +433,8 @@ class VocabularyManager:
             return 0
 
     def get_categories_stats(self):
-        """Lấy thống kê các category"""
+        """Get statistics of categories"""
         try:
-            # Lấy tất cả metadata
             all_data = self.collection.get(include=["metadatas"])
             categories = {}
 
@@ -400,7 +453,7 @@ class VocabularyManager:
 # Initialize Vocabulary Manager
 vocab_manager = VocabularyManager()
 
-# Khởi tạo OpenAI client
+# Initialize OpenAI client (keeping for backward compatibility)
 client = openai.OpenAI(
     base_url=os.getenv("AZURE_OPENAI_LLM_ENDPOINT"),
     api_key=os.getenv("AZURE_OPENAI_LLM_API_KEY"),
@@ -408,316 +461,14 @@ client = openai.OpenAI(
 
 HISTORY_FILE = "history.json"
 
-# Function schemas remain the same
-VOCABULARY_FUNCTION = {
-    "type": "function",
-    "function": {
-        "name": "analyze_vocabulary",
-        "description": "Analyze an English word and provide Vietnamese meaning, examples, and learning tips",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "word": {
-                    "type": "string",
-                    "description": "The English word being analyzed, fix this word if it is not a valid English word",
-                },
-                "vietnamese_meaning": {
-                    "type": "string",
-                    "description": "The meaning of the word in Vietnamese",
-                },
-                "part_of_speech": {
-                    "type": "string",
-                    "description": "Part of speech (noun, verb, adjective, etc.)",
-                },
-                "phonetic": {
-                    "type": "string",
-                    "description": "Phonetic pronunciation of the word",
-                },
-                "example_sentences": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Two example sentences using the word",
-                    "minItems": 2,
-                    "maxItems": 2,
-                },
-                "mnemonic_tip": {
-                    "type": "string",
-                    "description": "A memorable tip or mnemonic to help learn the word",
-                },
-                "difficulty_level": {
-                    "type": "string",
-                    "enum": ["beginner", "intermediate", "advanced"],
-                    "description": "Difficulty level of the word",
-                },
-                "synonyms": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of synonyms (up to 3)",
-                    "maxItems": 3,
-                },
-            },
-            "required": [
-                "word",
-                "vietnamese_meaning",
-                "part_of_speech",
-                "example_sentences",
-                "mnemonic_tip",
-            ],
-        },
-    },
-}
 
-TEXT_ANALYSIS_FUNCTION = {
-    "type": "function",
-    "function": {
-        "name": "extract_vocabulary_from_text",
-        "description": "Extract important vocabulary words from a text passage and analyze each word",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "vocabulary_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "word": {
-                                "type": "string",
-                                "description": "The English word being analyzed",
-                            },
-                            "vietnamese_meaning": {
-                                "type": "string",
-                                "description": "The meaning of the word in Vietnamese",
-                            },
-                            "part_of_speech": {
-                                "type": "string",
-                                "description": "Part of speech (noun, verb, adjective, etc.)",
-                            },
-                            "phonetic": {
-                                "type": "string",
-                                "description": "Phonetic pronunciation of the word",
-                            },
-                            "example_sentences": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Two example sentences using the word",
-                                "minItems": 2,
-                                "maxItems": 2,
-                            },
-                            "mnemonic_tip": {
-                                "type": "string",
-                                "description": "A memorable tip or mnemonic to help learn the word",
-                            },
-                            "difficulty_level": {
-                                "type": "string",
-                                "enum": ["beginner", "intermediate", "advanced"],
-                                "description": "Difficulty level of the word",
-                            },
-                            "synonyms": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "List of synonyms (up to 3)",
-                                "maxItems": 3,
-                            },
-                        },
-                        "required": [
-                            "word",
-                            "vietnamese_meaning",
-                            "part_of_speech",
-                            "example_sentences",
-                            "mnemonic_tip",
-                        ],
-                    },
-                    "description": "List of vocabulary words extracted from the text",
-                    "minItems": 1,
-                    "maxItems": 10,
-                }
-            },
-            "required": ["vocabulary_list"],
-        },
-    },
-}
-
-# Function tool for semantic vocabulary search
-SEMANTIC_VOCABULARY_SEARCH_FUNCTION = {
-    "type": "function",
-    "function": {
-        "name": "semantic_search_vocabulary",
-        "description": "Tìm kiếm từ vựng bằng semantic search dựa trên ý nghĩa và ngữ cảnh. Sử dụng khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm hoặc tình huống cụ thể.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Từ khóa hoặc mô tả chủ đề cần tìm kiếm. Có thể là tiếng Việt hoặc tiếng Anh. Ví dụ: 'du lịch', 'travel', 'công nghệ', 'technology', 'ăn uống', 'food', 'cảm xúc vui buồn', 'happy sad emotions'",
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Số lượng từ vựng tối đa cần trả về (mặc định 10)",
-                    "default": 10,
-                },
-                "similarity_threshold": {
-                    "type": "number",
-                    "description": "Ngưỡng độ tương đồng tối thiểu (0.0-1.0, mặc định 0.3)",
-                    "default": 0.3,
-                },
-            },
-            "required": ["query"],
-        },
-    },
-}
-
-
-# Enhanced save_to_history function with audio and ChromaDB (with duplicate prevention)
-def save_to_history(word, result):
-    # Kiểm tra duplicate trước khi lưu
-    chromadb_exists = vocab_manager.word_exists(word)
-    history_exists = word_exists_in_history(word)
-
-    if chromadb_exists and history_exists:
-        print(f"Word '{word}' already exists in both ChromaDB and history. Skipping...")
-        return False
-
-    history_data = []
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            try:
-                history_data = json.load(f)
-            except json.JSONDecodeError:
-                pass
-
-    # Generate audio if structured data is available
-    if result.get("structured") and result["structured"].get("vietnamese_meaning"):
-        vietnamese_meaning = result["structured"]["vietnamese_meaning"]
-        audio_path = tts_service.generate_audio(word, vietnamese_meaning)
-        if audio_path:
-            result["audio_path"] = audio_path
-            result["audio_text"] = f"{word}. {vietnamese_meaning}."
-
-        # Thêm vào ChromaDB với phân loại tự động (chỉ khi chưa tồn tại)
-        if not chromadb_exists:
-            try:
-                category = vocab_manager.add_vocabulary(result["structured"])
-                if category:
-                    result["category"] = category
-                    print(f"Word '{word}' classified into category: {category}")
-            except Exception as e:
-                print(f"Error adding to ChromaDB: {e}")
-        else:
-            print(
-                f"Word '{word}' already exists in ChromaDB. Skipping ChromaDB insertion..."
-            )
-
-    # Thêm vào history.json (chỉ khi chưa tồn tại)
-    if not history_exists:
-        history_data.append({"word": word, "result": result})
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history_data, f, ensure_ascii=False, indent=2)
-        print(f"Word '{word}' added to history.json")
-    else:
-        print(
-            f"Word '{word}' already exists in history.json. Skipping history insertion..."
-        )
-
-    return True
-
-
-def get_history():
-    history = []
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            try:
-                history = json.load(f)
-            except json.JSONDecodeError:
-                pass
-    return history
-
-
-def word_exists_in_history(word):
-    """Kiểm tra xem từ vựng đã tồn tại trong history.json chưa"""
-    history = get_history()
-    for item in history:
-        if item.get("word", "").lower() == word.lower():
-            return True
-    return False
-
-
-def clear_all_data():
-    """Xóa toàn bộ dữ liệu từ ChromaDB và history.json"""
+# LangChain Tools
+@tool
+def semantic_search_vocabulary_tool(
+    query: str, limit: int = 10, similarity_threshold: float = 0.3
+) -> dict:
+    """Search for vocabulary words using semantic search based on meaning and context"""
     try:
-        # Xóa ChromaDB
-        chromadb_deleted = vocab_manager.clear_all_data()
-
-        # Xóa history.json
-        history_deleted = 0
-        if os.path.exists(HISTORY_FILE):
-            history_data = get_history()
-            history_deleted = len(history_data)
-
-            # Xóa tất cả file audio
-            for item in history_data:
-                if "result" in item and "audio_path" in item["result"]:
-                    audio_path = item["result"]["audio_path"]
-                    file_path = audio_path.replace("/static/", "static/")
-                    if os.path.exists(file_path):
-                        try:
-                            os.remove(file_path)
-                            print(f"Deleted audio file: {file_path}")
-                        except Exception as e:
-                            print(f"Error deleting audio file: {e}")
-
-            # Xóa history.json
-            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-                json.dump([], f, ensure_ascii=False, indent=2)
-
-        print(
-            f"Cleared all data: {chromadb_deleted} from ChromaDB, {history_deleted} from history"
-        )
-        return chromadb_deleted, history_deleted
-
-    except Exception as e:
-        print(f"Error clearing all data: {e}")
-        return 0, 0
-
-
-def delete_flashcard(index):
-    history_data = get_history()
-    if 0 <= index < len(history_data):
-        # Get the word to delete
-        deleted_item = history_data[index]
-        word_to_delete = deleted_item.get("word", "")
-
-        # Delete from ChromaDB first
-        if word_to_delete:
-            try:
-                deleted_count = vocab_manager.delete_vocabulary(word_to_delete)
-                print(
-                    f"Deleted {deleted_count} entries for '{word_to_delete}' from ChromaDB"
-                )
-            except Exception as e:
-                print(f"Error deleting from ChromaDB: {e}")
-
-        # Delete associated audio file if it exists
-        if "result" in deleted_item and "audio_path" in deleted_item["result"]:
-            audio_path = deleted_item["result"]["audio_path"]
-            # Convert web path to file path
-            file_path = audio_path.replace("/static/", "static/")
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                    print(f"Deleted audio file: {file_path}")
-                except Exception as e:
-                    print(f"Error deleting audio file: {e}")
-
-        # Delete from history.json
-        del history_data[index]
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history_data, f, ensure_ascii=False, indent=2)
-
-
-def semantic_search_vocabulary_function(query, limit=10, similarity_threshold=0.3):
-    """Function để tìm kiếm từ vựng bằng semantic search cho function calling"""
-    try:
-        # Tìm kiếm bằng semantic search
         results = vocab_manager.semantic_search(
             query, limit=limit, similarity_threshold=similarity_threshold
         )
@@ -730,7 +481,6 @@ def semantic_search_vocabulary_function(query, limit=10, similarity_threshold=0.
                 "results": [],
             }
 
-        # Format kết quả cho function calling
         formatted_results = []
         for word_data in results:
             formatted_results.append(
@@ -765,6 +515,213 @@ def semantic_search_vocabulary_function(query, limit=10, similarity_threshold=0.
         }
 
 
+# LangChain Agent for chat
+def create_vocabulary_agent():
+    """Create LangChain agent for vocabulary assistance"""
+    system_prompt = """Bạn là một trợ lý học từ vựng tiếng Anh thông minh.
+    
+    Khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm, tình huống, hoặc cảm xúc 
+    (ví dụ: 'các từ liên quan đến du lịch', 'từ vựng về công nghệ', 'từ về cảm xúc vui buồn', 'words about happiness'),
+    hãy sử dụng tool semantic_search_vocabulary_tool để tìm kiếm trong cơ sở dữ liệu.
+    
+    Nếu không phải câu hỏi về tìm kiếm từ vựng, hãy trả lời bình thường như một trợ lý học tiếng Anh.
+    
+    Luôn trả lời bằng tiếng Việt và thân thiện."""
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ]
+    )
+
+    tools = [semantic_search_vocabulary_tool]
+
+    agent = create_openai_functions_agent(llm, tools, prompt)
+    agent_executor = AgentExecutor(
+        agent=agent, tools=tools, memory=memory, verbose=True
+    )
+
+    return agent_executor
+
+
+# Create the agent
+vocab_agent = create_vocabulary_agent()
+
+
+# Enhanced functions using LangChain
+def explain_word(word):
+    """Analyze vocabulary word using LangChain with structured output"""
+    try:
+        parser = PydanticOutputParser(pydantic_object=VocabularyWord)
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a helpful English vocabulary tutor. "
+                    "Analyze the given English word thoroughly and provide structured information. "
+                    "Make sure to provide accurate phonetic transcription, appropriate difficulty level, "
+                    "and helpful synonyms when available.\n"
+                    "{format_instructions}",
+                ),
+                ("user", "Please analyze the English word: '{word}'"),
+            ]
+        )
+
+        chain = prompt | llm | parser
+
+        structured_data = chain.invoke(
+            {"word": word, "format_instructions": parser.get_format_instructions()}
+        )
+
+        # Convert to dict for compatibility
+        structured_dict = structured_data.dict()
+        formatted_result = format_vocabulary_result(structured_dict)
+
+        return {"formatted": formatted_result, "structured": structured_dict}
+
+    except Exception as e:
+        print(f"Error in explain_word: {e}")
+        # Fallback to original OpenAI method
+        return explain_word_fallback(word)
+
+
+def explain_word_fallback(word):
+    """Fallback method using original OpenAI approach"""
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful English vocabulary tutor. "
+                    "When given an English word, analyze it thoroughly and use the analyze_vocabulary function "
+                    "to provide structured information including Vietnamese meaning, examples, and learning tips."
+                ),
+            },
+            {"role": "user", "content": f"Please analyze the English word: '{word}'"},
+        ]
+
+        response = client.chat.completions.create(
+            model="GPT-4o-mini",
+            messages=messages,
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "analyze_vocabulary",
+                        "description": "Analyze an English word and provide Vietnamese meaning, examples, and learning tips",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "word": {"type": "string"},
+                                "vietnamese_meaning": {"type": "string"},
+                                "part_of_speech": {"type": "string"},
+                                "phonetic": {"type": "string"},
+                                "example_sentences": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                },
+                                "mnemonic_tip": {"type": "string"},
+                                "difficulty_level": {
+                                    "type": "string",
+                                    "enum": ["beginner", "intermediate", "advanced"],
+                                },
+                                "synonyms": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "maxItems": 3,
+                                },
+                            },
+                            "required": [
+                                "word",
+                                "vietnamese_meaning",
+                                "part_of_speech",
+                                "example_sentences",
+                                "mnemonic_tip",
+                            ],
+                        },
+                    },
+                }
+            ],
+            tool_choice={
+                "type": "function",
+                "function": {"name": "analyze_vocabulary"},
+            },
+        )
+
+        if response.choices[0].message.tool_calls:
+            tool_call = response.choices[0].message.tool_calls[0]
+            if tool_call.function.name == "analyze_vocabulary":
+                function_args = json.loads(tool_call.function.arguments)
+                formatted_result = format_vocabulary_result(function_args)
+                return {"formatted": formatted_result, "structured": function_args}
+
+        return {
+            "formatted": f"Không thể phân tích từ '{word}'. Vui lòng thử lại.",
+            "structured": None,
+        }
+
+    except Exception as e:
+        print(f"Error in fallback explain_word: {e}")
+        return {
+            "formatted": f"Đã xảy ra lỗi khi phân tích từ '{word}': {str(e)}",
+            "structured": None,
+        }
+
+
+def analyze_text_for_vocabulary(text):
+    """Analyze text for vocabulary using LangChain with structured output"""
+    try:
+        parser = PydanticOutputParser(pydantic_object=VocabularyList)
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are an English vocabulary tutor. "
+                    "Extract 5-10 important vocabulary words from the given text passage. "
+                    "Focus on words that are useful for English learners - intermediate to advanced level words, "
+                    "excluding very basic words like 'the', 'and', 'is', etc.\n"
+                    "{format_instructions}",
+                ),
+                (
+                    "user",
+                    "Please extract important vocabulary words from this text and analyze each one:\n\n{text}",
+                ),
+            ]
+        )
+
+        chain = prompt | llm | parser
+
+        result = chain.invoke(
+            {"text": text, "format_instructions": parser.get_format_instructions()}
+        )
+
+        results = []
+        for vocab_data in result.vocabulary_list:
+            vocab_dict = vocab_data.dict()
+            formatted_result = format_vocabulary_result(vocab_dict)
+            results.append(
+                {
+                    "word": vocab_dict.get("word", ""),
+                    "formatted": formatted_result,
+                    "structured": vocab_dict,
+                }
+            )
+
+        return results
+
+    except Exception as e:
+        print(f"Error in analyze_text_for_vocabulary: {e}")
+        return []
+
+
+# Rest of the utility functions remain the same
 def format_vocabulary_result(function_data):
     """Format the structured data from function calling into readable text"""
     word = function_data.get("word", "")
@@ -804,123 +761,138 @@ def format_vocabulary_result(function_data):
     return result
 
 
-def explain_word(word):
+def save_to_history(word, result):
+    """Save vocabulary to history with duplicate prevention"""
+    chromadb_exists = vocab_manager.word_exists(word)
+    history_exists = word_exists_in_history(word)
+
+    if chromadb_exists and history_exists:
+        print(f"Word '{word}' already exists in both ChromaDB and history. Skipping...")
+        return False
+
+    history_data = []
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            try:
+                history_data = json.load(f)
+            except json.JSONDecodeError:
+                pass
+
+    if result.get("structured") and result["structured"].get("vietnamese_meaning"):
+        vietnamese_meaning = result["structured"]["vietnamese_meaning"]
+        audio_path = tts_service.generate_audio(word, vietnamese_meaning)
+        if audio_path:
+            result["audio_path"] = audio_path
+            result["audio_text"] = f"{word}. {vietnamese_meaning}."
+
+        if not chromadb_exists:
+            try:
+                category = vocab_manager.add_vocabulary(result["structured"])
+                if category:
+                    result["category"] = category
+                    print(f"Word '{word}' classified into category: {category}")
+            except Exception as e:
+                print(f"Error adding to ChromaDB: {e}")
+
+    if not history_exists:
+        history_data.append({"word": word, "result": result})
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history_data, f, ensure_ascii=False, indent=2)
+        print(f"Word '{word}' added to history.json")
+
+    return True
+
+
+def get_history():
+    """Get vocabulary history"""
+    history = []
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            try:
+                history = json.load(f)
+            except json.JSONDecodeError:
+                pass
+    return history
+
+
+def word_exists_in_history(word):
+    """Check if vocabulary word exists in history"""
+    history = get_history()
+    for item in history:
+        if item.get("word", "").lower() == word.lower():
+            return True
+    return False
+
+
+def clear_all_data():
+    """Clear all data from ChromaDB and history.json"""
     try:
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a helpful English vocabulary tutor. "
-                    "When given an English word, analyze it thoroughly and use the analyze_vocabulary function "
-                    "to provide structured information including Vietnamese meaning, examples, and learning tips. "
-                    "Make sure to provide accurate phonetic transcription, appropriate difficulty level, "
-                    "and helpful synonyms when available."
-                ),
-            },
-            {"role": "user", "content": f"Please analyze the English word: '{word}'"},
-        ]
+        chromadb_deleted = vocab_manager.clear_all_data()
 
-        response = client.chat.completions.create(
-            model="GPT-4o-mini",
-            messages=messages,
-            tools=[VOCABULARY_FUNCTION],
-            tool_choice={
-                "type": "function",
-                "function": {"name": "analyze_vocabulary"},
-            },
+        history_deleted = 0
+        if os.path.exists(HISTORY_FILE):
+            history_data = get_history()
+            history_deleted = len(history_data)
+
+            for item in history_data:
+                if "result" in item and "audio_path" in item["result"]:
+                    audio_path = item["result"]["audio_path"]
+                    file_path = audio_path.replace("/static/", "static/")
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                            print(f"Deleted audio file: {file_path}")
+                        except Exception as e:
+                            print(f"Error deleting audio file: {e}")
+
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+
+        print(
+            f"Cleared all data: {chromadb_deleted} from ChromaDB, {history_deleted} from history"
         )
-
-        if response.choices[0].message.tool_calls:
-            tool_call = response.choices[0].message.tool_calls[0]
-            if tool_call.function.name == "analyze_vocabulary":
-                function_args = json.loads(tool_call.function.arguments)
-
-                structured_data = function_args
-                formatted_result = format_vocabulary_result(function_args)
-
-                return {"formatted": formatted_result, "structured": structured_data}
-
-        return {
-            "formatted": f"Không thể phân tích từ '{word}'. Vui lòng thử lại.",
-            "structured": None,
-        }
+        return chromadb_deleted, history_deleted
 
     except Exception as e:
-        print(f"Error in explain_word: {e}")
-        return {
-            "formatted": f"Đã xảy ra lỗi khi phân tích từ '{word}': {str(e)}",
-            "structured": None,
-        }
+        print(f"Error clearing all data: {e}")
+        return 0, 0
 
 
-def analyze_text_for_vocabulary(text):
-    try:
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are an English vocabulary tutor. "
-                    "Extract 5-10 important vocabulary words from the given text passage. "
-                    "Focus on words that are useful for English learners - intermediate to advanced level words, "
-                    "excluding very basic words like 'the', 'and', 'is', etc. "
-                    "For each word, provide Vietnamese meaning, examples, and learning tips."
-                ),
-            },
-            {
-                "role": "user",
-                "content": f"Please extract important vocabulary words from this text and analyze each one:\n\n{text}",
-            },
-        ]
+def delete_flashcard(index):
+    """Delete flashcard by index"""
+    history_data = get_history()
+    if 0 <= index < len(history_data):
+        deleted_item = history_data[index]
+        word_to_delete = deleted_item.get("word", "")
 
-        response = client.chat.completions.create(
-            model="GPT-4o-mini",
-            messages=messages,
-            tools=[TEXT_ANALYSIS_FUNCTION],
-            tool_choice={
-                "type": "function",
-                "function": {"name": "extract_vocabulary_from_text"},
-            },
-        )
+        if word_to_delete:
+            try:
+                deleted_count = vocab_manager.delete_vocabulary(word_to_delete)
+                print(
+                    f"Deleted {deleted_count} entries for '{word_to_delete}' from ChromaDB"
+                )
+            except Exception as e:
+                print(f"Error deleting from ChromaDB: {e}")
 
-        if response.choices[0].message.tool_calls:
-            tool_call = response.choices[0].message.tool_calls[0]
-            if tool_call.function.name == "extract_vocabulary_from_text":
-                function_args = json.loads(tool_call.function.arguments)
-                vocabulary_list = function_args.get("vocabulary_list", [])
+        if "result" in deleted_item and "audio_path" in deleted_item["result"]:
+            audio_path = deleted_item["result"]["audio_path"]
+            file_path = audio_path.replace("/static/", "static/")
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    print(f"Deleted audio file: {file_path}")
+                except Exception as e:
+                    print(f"Error deleting audio file: {e}")
 
-                results = []
-                for vocab_data in vocabulary_list:
-                    formatted_result = format_vocabulary_result(vocab_data)
-                    results.append(
-                        {
-                            "word": vocab_data.get("word", ""),
-                            "formatted": formatted_result,
-                            "structured": vocab_data,
-                        }
-                    )
-
-                return results
-
-        return []
-
-    except Exception as e:
-        print(f"Error in analyze_text_for_vocabulary: {e}")
-        return []
+        del history_data[index]
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history_data, f, ensure_ascii=False, indent=2)
 
 
 def extract_word_from_input(user_input):
-    """
-    Extract the actual English word from user input phrases like:
-    - "help me add world hello" -> "hello"
-    - "giúp tôi thêm từ hello" -> "hello"
-    - "add word computer" -> "computer"
-    - "thêm từ computer" -> "computer"
-    - "hello" -> "hello" (direct word)
-    """
-    # Remove common phrases and extract the word
+    """Extract the actual English word from user input phrases"""
     user_input = user_input.lower().strip()
 
-    # Common English phrases to remove
     english_phrases = [
         "help me add world",
         "help me add word",
@@ -931,8 +903,6 @@ def extract_word_from_input(user_input):
         "i want to add",
         "add the word",
         "add this word",
-        "add word",
-        "add world",
         "add vocabulary",
         "help me add",
         "please help me add",
@@ -945,7 +915,6 @@ def extract_word_from_input(user_input):
         "add new vocabulary",
     ]
 
-    # Common Vietnamese phrases to remove
     vietnamese_phrases = [
         "giúp tôi thêm từ",
         "giúp tôi thêm",
@@ -966,22 +935,17 @@ def extract_word_from_input(user_input):
         "thêm từ đó vào",
     ]
 
-    # Remove all common phrases
     for phrase in english_phrases + vietnamese_phrases:
         user_input = user_input.replace(phrase, "").strip()
 
-    # Clean up extra spaces and punctuation
     user_input = re.sub(r"\s+", " ", user_input).strip()
     user_input = re.sub(r"[^\w\s]", "", user_input).strip()
 
-    # If we still have multiple words, try to find the most likely English word
     words = user_input.split()
 
     if len(words) == 1:
         return words[0]
     elif len(words) > 1:
-        # Look for the most likely English word (usually the last meaningful word)
-        # Filter out common filler words
         filler_words = {
             "the",
             "a",
@@ -1042,15 +1006,13 @@ def extract_word_from_input(user_input):
             "theirs",
         }
 
-        # Remove filler words and get the last meaningful word
         meaningful_words = [word for word in words if word.lower() not in filler_words]
 
         if meaningful_words:
-            # Prefer longer words as they're more likely to be vocabulary words
             meaningful_words.sort(key=len, reverse=True)
-            return meaningful_words[0]  # Return the longest meaningful word
+            return meaningful_words[0]
         else:
-            return words[-1]  # If no meaningful words found, return the last word
+            return words[-1]
 
     return user_input
 
@@ -1068,21 +1030,21 @@ def index():
             save_to_history(word, result_data)
 
     history = get_history()
-    history = history[::-1]  # Đảo ngược để mới nhất ở đầu
+    history = history[::-1]
 
     return render_template("index.html", result=result, word=word, history=history)
 
 
 @app.route("/chat")
 def chat():
-    """Trang chatbox"""
+    """Chat page"""
     history = get_history()
     return render_template("chat.html", total_words=len(history))
 
 
 @app.route("/api/chat", methods=["POST"])
 def chat_api():
-    """API xử lý tin nhắn chat"""
+    """API for processing chat messages"""
     data = request.get_json()
     message = data.get("message", "").strip()
     chat_type = data.get("type", "")
@@ -1092,13 +1054,11 @@ def chat_api():
 
     try:
         if chat_type == "word":
-            # Extract the word from the user's input
             word_to_analyze = extract_word_from_input(message)
             print(f"User input: '{message}' -> Extracted word: '{word_to_analyze}'")
 
             result_data = explain_word(word_to_analyze)
             if result_data["structured"]:
-                # Kiểm tra duplicate trước khi lưu
                 chromadb_exists = vocab_manager.word_exists(word_to_analyze)
                 history_exists = word_exists_in_history(word_to_analyze)
 
@@ -1185,101 +1145,290 @@ def chat_api():
 
 @app.route("/api/semantic-search", methods=["POST"])
 def semantic_search_api():
-    """API xử lý tìm kiếm từ vựng bằng semantic search với function calling"""
+    """Enhanced API for semantic search using ChromaDB first, then OpenAI fallback"""
     data = request.get_json()
     message = data.get("message", "").strip()
+    auto_add = data.get("auto_add", False)  # New option to auto-add OpenAI results
 
     if not message:
         return jsonify({"success": False, "message": "Vui lòng nhập nội dung tìm kiếm"})
 
     try:
-        # Sử dụng AI để quyết định có cần tìm kiếm từ vựng không và trích xuất query
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "Bạn là một trợ lý học từ vựng tiếng Anh thông minh sử dụng semantic search. "
-                    "Khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm, tình huống, hoặc cảm xúc "
-                    "(ví dụ: 'các từ liên quan đến du lịch', 'từ vựng về công nghệ', 'từ về cảm xúc vui buồn', 'words about happiness'), "
-                    "hãy sử dụng function semantic_search_vocabulary để tìm kiếm trong cơ sở dữ liệu. "
-                    "Semantic search sẽ tìm từ vựng dựa trên ý nghĩa và ngữ cảnh, không chỉ khớp từ khóa. "
-                    "Nếu không phải câu hỏi về tìm kiếm từ vựng, hãy trả lời bình thường."
-                ),
-            },
-            {"role": "user", "content": message},
-        ]
-
-        response = client.chat.completions.create(
-            model="GPT-4o-mini",
-            messages=messages,
-            tools=[SEMANTIC_VOCABULARY_SEARCH_FUNCTION],
-            tool_choice="auto",
+        # Step 1: Try ChromaDB semantic search first
+        chromadb_results = vocab_manager.semantic_search(
+            message, limit=10, similarity_threshold=0.3
         )
 
-        # Kiểm tra xem AI có gọi function không
-        if response.choices[0].message.tool_calls:
-            tool_call = response.choices[0].message.tool_calls[0]
-            if tool_call.function.name == "semantic_search_vocabulary":
-                function_args = json.loads(tool_call.function.arguments)
-                query = function_args.get("query", "")
-                limit = function_args.get("limit", 10)
-                similarity_threshold = function_args.get("similarity_threshold", 0.3)
+        if chromadb_results:
+            print(f"Found {len(chromadb_results)} results in ChromaDB")
 
-                # Gọi function semantic search
-                search_result = semantic_search_vocabulary_function(
-                    query, limit, similarity_threshold
+            # Format results for response
+            structured_results = []
+            for vocab in chromadb_results:
+                structured_results.append(
+                    {
+                        "word": vocab["word"],
+                        "structured": vocab,
+                        "formatted": format_vocabulary_result(vocab),
+                    }
                 )
 
-                if search_result["success"]:
-                    # Return only structured results for flashcard display
-                    return jsonify(
-                        {
-                            "success": True,
-                            "message": f"🔍 Tìm thấy {search_result['count']} từ vựng liên quan đến '{query}'",
-                            "type": "semantic_search",
-                            "query": query,
-                            "results": search_result["results"],
-                            "count": search_result["count"],
-                            "structured_results": [
-                                {
-                                    "word": vocab["word"],
-                                    "structured": vocab,
-                                    "formatted": format_vocabulary_result(vocab),
-                                }
-                                for vocab in search_result["results"]
-                            ],
-                        }
-                    )
-                else:
-                    return jsonify(
-                        {
-                            "success": False,
-                            "message": search_result["message"],
-                            "type": "semantic_search",
-                        }
-                    )
-        else:
-            # Không có function call, trả lời bình thường
-            ai_response = response.choices[0].message.content
             return jsonify(
-                {"success": True, "message": ai_response, "type": "general_chat"}
+                {
+                    "success": True,
+                    "source": "chromadb",
+                    "message": f"🔍 Tìm thấy {len(chromadb_results)} từ vựng liên quan đến '{message}' trong cơ sở dữ liệu",
+                    "type": "semantic_search",
+                    "query": message,
+                    "results": chromadb_results,
+                    "count": len(chromadb_results),
+                    "structured_results": structured_results,
+                }
+            )
+
+        # Step 2: If no results in ChromaDB, use OpenAI
+        print(f"No results in ChromaDB, using OpenAI for: '{message}'")
+
+        # Use LangChain to generate relevant vocabulary
+        try:
+            from langchain_core.output_parsers import PydanticOutputParser
+            from langchain_core.prompts import ChatPromptTemplate
+
+            # Define the search result structure for OpenAI
+            class OpenAIVocabularySearch(BaseModel):
+                words: List[VocabularyWord] = Field(
+                    description="List of vocabulary words related to the search query",
+                    min_items=3,
+                    max_items=10,
+                )
+
+            parser = PydanticOutputParser(pydantic_object=OpenAIVocabularySearch)
+
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    (
+                        "system",
+                        "You are an English vocabulary expert for Vietnamese learners. "
+                        "Given a search query (in Vietnamese or English), generate 5-8 relevant "
+                        "English vocabulary words that would be most useful for learners studying this topic. "
+                        "Focus on practical, commonly used words. Provide accurate Vietnamese meanings, "
+                        "clear example sentences, and helpful learning tips.\n"
+                        "{format_instructions}",
+                    ),
+                    (
+                        "user",
+                        "Generate English vocabulary words related to: '{query}'\n"
+                        "Consider the most important and useful words that English learners "
+                        "should know about this topic.",
+                    ),
+                ]
+            )
+
+            chain = prompt | llm | parser
+
+            result = chain.invoke(
+                {
+                    "query": message,
+                    "format_instructions": parser.get_format_instructions(),
+                }
+            )
+
+            # Convert to expected format
+            openai_results = []
+            structured_results = []
+
+            for word_data in result.words:
+                word_dict = word_data.dict()
+
+                # Add metadata
+                word_dict["similarity_score"] = (
+                    0.95  # High score for AI-generated relevant words
+                )
+                word_dict["source"] = "openai_generated"
+                word_dict["category"] = vocab_manager.classify_category(
+                    word_dict["word"],
+                    word_dict["vietnamese_meaning"],
+                    word_dict["part_of_speech"],
+                    word_dict["example_sentences"],
+                )
+
+                openai_results.append(word_dict)
+
+                # Format for display
+                structured_results.append(
+                    {
+                        "word": word_dict["word"],
+                        "structured": word_dict,
+                        "formatted": format_vocabulary_result(word_dict),
+                    }
+                )
+
+            # Optional: Auto-add to database if requested
+            added_words = []
+            if auto_add and openai_results:
+                for word_data in openai_results:
+                    try:
+                        # Check if word already exists
+                        if not vocab_manager.word_exists(word_data["word"]):
+                            # Add to ChromaDB
+                            vocab_manager.add_vocabulary(word_data)
+
+                            # Add to history with audio generation
+                            result_data = {
+                                "formatted": format_vocabulary_result(word_data),
+                                "structured": word_data,
+                            }
+
+                            if save_to_history(word_data["word"], result_data):
+                                added_words.append(word_data["word"])
+
+                    except Exception as e:
+                        print(f"Error adding word {word_data['word']}: {e}")
+
+            response_message = f"🤖 Tìm thấy {len(openai_results)} từ vựng liên quan đến '{message}' (được tạo bởi AI)"
+            if added_words:
+                response_message += f" và đã thêm {len(added_words)} từ vào flashcard"
+
+            return jsonify(
+                {
+                    "success": True,
+                    "source": "openai",
+                    "message": response_message,
+                    "type": "semantic_search",
+                    "query": message,
+                    "results": openai_results,
+                    "count": len(openai_results),
+                    "structured_results": structured_results,
+                    "added_words": added_words if added_words else [],
+                }
+            )
+
+        except Exception as openai_error:
+            print(f"Error with OpenAI search: {openai_error}")
+
+            # Step 3: Final fallback - try keyword search in ChromaDB
+            print("Trying keyword fallback search...")
+            keyword_results = vocab_manager._fallback_keyword_search(message, limit=10)
+
+            if keyword_results:
+                structured_results = []
+                for vocab in keyword_results:
+                    structured_results.append(
+                        {
+                            "word": vocab["word"],
+                            "structured": vocab,
+                            "formatted": format_vocabulary_result(vocab),
+                        }
+                    )
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "source": "chromadb_keyword",
+                        "message": f"🔍 Tìm thấy {len(keyword_results)} từ vựng có liên quan đến '{message}' (tìm kiếm từ khóa)",
+                        "type": "semantic_search",
+                        "query": message,
+                        "results": keyword_results,
+                        "count": len(keyword_results),
+                        "structured_results": structured_results,
+                    }
+                )
+
+            # No results from any method
+            return jsonify(
+                {
+                    "success": False,
+                    "source": "none",
+                    "message": f"❌ Không tìm thấy từ vựng nào liên quan đến '{message}'. Hãy thử với từ khóa khác.",
+                    "type": "semantic_search",
+                    "query": message,
+                    "results": [],
+                    "count": 0,
+                }
             )
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"❌ Đã xảy ra lỗi: {str(e)}"})
+        print(f"Error in semantic_search_api: {e}")
+        return jsonify(
+            {"success": False, "message": f"⚠️ Đã xảy ra lỗi tìm kiếm: {str(e)}"}
+        )
+
+
+# Add the keyword search method to VocabularyManager class
+def _fallback_keyword_search(self, query, limit=10):
+    """
+    Fallback keyword-based search in ChromaDB when semantic search fails
+    """
+    try:
+        # Get all data from ChromaDB
+        all_data = self.collection.get(include=["metadatas", "documents"])
+
+        if not all_data["metadatas"]:
+            return []
+
+        query_lower = query.lower()
+        query_words = query_lower.split()
+
+        results = []
+        for i, metadata in enumerate(all_data["metadatas"]):
+            # Search in various fields
+            searchable_text = (
+                f"{metadata.get('word', '')} "
+                f"{metadata.get('vietnamese_meaning', '')} "
+                f"{metadata.get('category', '')} "
+                f"{metadata.get('example_sentences', '').replace('|', ' ')} "
+                f"{metadata.get('synonyms', '').replace(',', ' ')}"
+            ).lower()
+
+            # Calculate relevance score based on keyword matches
+            relevance_score = 0
+            for word in query_words:
+                if word in searchable_text:
+                    relevance_score += searchable_text.count(word)
+
+            if relevance_score > 0:
+                result_item = {
+                    "word": metadata["word"],
+                    "vietnamese_meaning": metadata["vietnamese_meaning"],
+                    "category": metadata["category"],
+                    "part_of_speech": metadata["part_of_speech"],
+                    "example_sentences": metadata["example_sentences"].split("|"),
+                    "mnemonic_tip": metadata["mnemonic_tip"],
+                    "phonetic": metadata["phonetic"],
+                    "synonyms": (
+                        metadata["synonyms"].split(",") if metadata["synonyms"] else []
+                    ),
+                    "difficulty_level": metadata.get(
+                        "difficulty_level", "intermediate"
+                    ),
+                    "similarity_score": min(
+                        relevance_score / 10, 1.0
+                    ),  # Normalize score
+                    "source": "chromadb_keyword",
+                }
+                results.append(result_item)
+
+        # Sort by relevance score
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+
+        return results[:limit]
+
+    except Exception as e:
+        print(f"Error in keyword search: {e}")
+        return []
 
 
 @app.route("/list")
 def flashcard_list():
-    """Hiển thị danh sách tất cả flashcard"""
+    """Display list of all flashcards"""
     history = get_history()
-    history = history[::-1]  # Đảo ngược để mới nhất ở đầu
+    history = history[::-1]
     return render_template("list.html", history=history)
 
 
 @app.route("/delete/<int:index>")
 def delete_flashcard_route(index):
-    """Xóa flashcard theo index"""
+    """Delete flashcard by index"""
     history = get_history()
     actual_index = len(history) - 1 - index
     delete_flashcard(actual_index)
@@ -1288,7 +1437,7 @@ def delete_flashcard_route(index):
 
 @app.route("/api/delete-word", methods=["POST"])
 def delete_word_api():
-    """API xóa từ vựng theo tên từ"""
+    """API for deleting vocabulary word by name"""
     try:
         data = request.get_json()
         word = data.get("word", "").strip()
@@ -1298,10 +1447,8 @@ def delete_word_api():
                 {"success": False, "message": "Vui lòng cung cấp tên từ cần xóa"}
             )
 
-        # Xóa từ ChromaDB
         deleted_count = vocab_manager.delete_vocabulary(word)
 
-        # Xóa từ history.json
         history_data = get_history()
         original_count = len(history_data)
         history_data = [
@@ -1334,9 +1481,8 @@ def delete_word_api():
 
 @app.route("/api/clear-all-data", methods=["POST"])
 def clear_all_data_api():
-    """API xóa toàn bộ dữ liệu từ ChromaDB và history.json"""
+    """API for clearing all data from ChromaDB and history.json"""
     try:
-        # Xác nhận từ client
         data = request.get_json()
         confirm = data.get("confirm", False)
 
@@ -1348,7 +1494,6 @@ def clear_all_data_api():
                 }
             )
 
-        # Thực hiện xóa
         chromadb_deleted, history_deleted = clear_all_data()
 
         return jsonify(
@@ -1369,7 +1514,7 @@ def clear_all_data_api():
 
 @app.route("/api/word/<word>")
 def get_word_api(word):
-    """API endpoint để lấy thông tin từ dưới dạng JSON"""
+    """API endpoint to get word information in JSON format"""
     result_data = explain_word(word)
     return {
         "word": word,
@@ -1379,15 +1524,9 @@ def get_word_api(word):
     }
 
 
-# @app.route("/api/search-topic", methods=["POST"])
-# def search_by_topic_api():
-#     """API tìm kiếm từ vựng theo chủ đề - ĐÃ XÓA"""
-#     return jsonify({"success": False, "message": "Tính năng tìm kiếm thông minh đã bị xóa"})
-
-
 @app.route("/api/search-category", methods=["POST"])
 def search_by_category_api():
-    """API tìm kiếm từ vựng theo category"""
+    """API for searching vocabulary by category"""
     try:
         data = request.get_json()
         category = data.get("category", "").strip()
@@ -1396,7 +1535,6 @@ def search_by_category_api():
         if not category:
             return jsonify({"success": False, "message": "Vui lòng chọn category"})
 
-        # Tìm kiếm trong ChromaDB theo category
         results = vocab_manager.search_by_category(category, limit=limit)
 
         if results:
@@ -1423,7 +1561,7 @@ def search_by_category_api():
 
 @app.route("/api/categories")
 def get_categories_api():
-    """API lấy thống kê các category"""
+    """API for getting category statistics"""
     try:
         categories = vocab_manager.get_categories_stats()
         return jsonify(
@@ -1439,7 +1577,7 @@ def get_categories_api():
 
 @app.route("/search")
 def search_page():
-    """Trang tìm kiếm thông minh với semantic search"""
+    """Smart search page with semantic search"""
     return render_template("search.html")
 
 
@@ -1447,13 +1585,11 @@ def search_page():
 def generate_audio_api(word):
     """Generate or get existing audio for a word"""
     try:
-        # Find word in history
         history = get_history()
         for item in history:
             if item["word"].lower() == word.lower():
                 result = item.get("result", {})
 
-                # If audio already exists, return it
                 if result.get("audio_path"):
                     return jsonify(
                         {
@@ -1463,18 +1599,15 @@ def generate_audio_api(word):
                         }
                     )
 
-                # Generate new audio if structured data exists
                 if result.get("structured") and result["structured"].get(
                     "vietnamese_meaning"
                 ):
                     vietnamese_meaning = result["structured"]["vietnamese_meaning"]
                     audio_path = tts_service.generate_audio(word, vietnamese_meaning)
                     if audio_path:
-                        # Update history with audio path
                         result["audio_path"] = audio_path
                         result["audio_text"] = f"{word}. {vietnamese_meaning}."
 
-                        # Save updated history
                         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                             json.dump(history, f, ensure_ascii=False, indent=2)
 
@@ -1490,7 +1623,6 @@ def generate_audio_api(word):
         return jsonify({"success": False, "message": str(e)})
 
 
-# Serve static files
 @app.route("/static/audio/<filename>")
 def serve_audio(filename):
     """Serve audio files"""
