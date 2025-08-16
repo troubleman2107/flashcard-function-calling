@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ - Flash Card System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .navbar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .faq-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+      }
+
+      .faq-form {
+        margin-bottom: 2rem;
+      }
+
+      .faq-answer {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/">Flash Card System</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/"
+                ><i class="bi bi-house-door"></i> Home</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/list"
+                ><i class="bi bi-card-list"></i> Flashcards</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/chat"
+                ><i class="bi bi-chat-dots"></i> Chat</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/faq"
+                ><i class="bi bi-question-circle"></i> FAQ</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="page-header">
+        <h1>Frequently Asked Questions</h1>
+      </div>
+
+      <div class="faq-container">
+        <form class="faq-form" id="faqForm">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              id="faqQuestion"
+              placeholder="Ask a question about the flash card system..."
+              required
+            />
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search me-1"></i> Ask
+            </button>
+          </div>
+        </form>
+        <div id="faqAnswer" class="faq-answer" style="display: none"></div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const form = document.getElementById("faqForm");
+      const answerDiv = document.getElementById("faqAnswer");
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const question = document.getElementById("faqQuestion").value.trim();
+        if (!question) return;
+
+        answerDiv.style.display = "none";
+        answerDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span>Thinking...</span>
+                </div>`;
+        answerDiv.style.display = "block";
+
+        try {
+          const res = await fetch("/api/faq", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          const data = await res.json();
+          answerDiv.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-lightbulb text-primary me-2 fs-4"></i>
+                        <div>${
+                          data.success ? data.answer : "No answer found."
+                        }</div>
+                    </div>`;
+        } catch (error) {
+          answerDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        An error occurred while getting the answer.
+                    </div>`;
+        }
+      };
+    </script>
+  </body>
+</html>
