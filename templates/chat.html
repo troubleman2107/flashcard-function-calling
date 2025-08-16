@@ -190,7 +190,7 @@
       .send-button {
         position: absolute;
         right: 10px;
-        top: 50%;
+        top: 33%;
         transform: translateY(-50%);
         border-radius: 50%;
         width: 40px;
@@ -238,62 +238,71 @@
       }
 
       .vocabulary-result {
+        margin-top: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
         background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-top: 0.5rem;
-        font-family: inherit;
+      }
+
+      .vocabulary-result:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
       }
 
       .vocabulary-content {
-        font-size: 0.9rem;
-        line-height: 1.4;
+        padding: 1.5rem;
       }
 
       .word-header {
         text-align: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
         border-bottom: 2px solid #e9ecef;
       }
 
       .word-title {
-        font-size: 1.5rem;
+        font-size: 2rem;
         font-weight: 700;
         color: #667eea;
-        margin: 0 0 0.25rem 0;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
       }
 
       .phonetic {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: #6c757d;
         font-style: italic;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-family: "Courier New", monospace;
       }
 
       .word-meta {
         display: flex;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
       }
 
       .pos-tag {
-        background: #f8f9fa;
-        color: #495057;
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 500;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
       }
 
       .difficulty-badge {
-        padding: 0.2rem 0.6rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 500;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
         color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
       .difficulty-beginner {
@@ -309,65 +318,88 @@
         background: #dc3545;
       }
 
+      .similarity-badge {
+        background: #e9ecef;
+        color: #6c757d;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border: 1px solid #ced4da;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
       .section-title {
         font-weight: 600;
         color: #495057;
-        margin-bottom: 0.4rem;
-        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #667eea;
       }
 
       .meaning-section,
       .examples-section,
       .synonyms-section {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
       }
 
       .meaning {
-        background: #f8f9fa;
-        padding: 0.6rem;
-        border-radius: 6px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem;
+        border-radius: 10px;
         font-weight: 500;
         color: #495057;
+        border-left: 4px solid #667eea;
       }
 
       .examples-list {
         margin: 0;
-        padding-left: 1rem;
+        padding-left: 1.2rem;
       }
 
       .examples-list li {
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.5rem;
         color: #495057;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
       }
 
       .synonyms {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: 0.5rem;
       }
 
       .synonym-tag {
-        background: #e9ecef;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
         color: #495057;
-        padding: 0.2rem 0.5rem;
-        border-radius: 10px;
-        font-size: 0.75rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
         font-weight: 500;
+        border: 1px solid #ced4da;
       }
 
       .mnemonic-section {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 6px;
-        padding: 0.6rem;
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #fdcb6e;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
       }
 
       .mnemonic {
         color: #856404;
         font-style: italic;
         margin: 0;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
       }
 
       .vocabulary-list {
@@ -386,6 +418,26 @@
         margin: 0 0 0.5rem 0;
         color: #667eea;
         font-weight: 600;
+      }
+
+      .semantic-search-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+
+      .semantic-search-header h5 {
+        margin: 0 0 0.5rem 0;
+        font-weight: 600;
+      }
+
+      .semantic-search-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
       }
 
       @media (max-width: 768px) {
@@ -552,6 +604,18 @@
             data.difficulty_level.charAt(0).toUpperCase() +
             data.difficulty_level.slice(1)
           }</span>`;
+        }
+        // Add similarity score if available
+        if (data.similarity_score) {
+          const scoreEmoji =
+            data.similarity_score >= 0.7
+              ? "🎯"
+              : data.similarity_score >= 0.5
+              ? "📍"
+              : "📌";
+          html += `<span class="similarity-badge" title="Độ tương đồng: ${
+            data.similarity_score
+          }">${scoreEmoji} ${(data.similarity_score * 100).toFixed(0)}%</span>`;
         }
         html += "</div></div>";
 
@@ -726,7 +790,32 @@
           hideTyping();
 
           if (data.success) {
-            addMessage("bot", data.message);
+            // Check if this is a semantic search result
+            if (
+              data.type === "semantic_search" &&
+              data.structured_results &&
+              data.structured_results.length > 0
+            ) {
+              // Display a clean header message
+              addMessage("bot", data.message);
+
+              // Then display each result as a structured vocabulary card
+              setTimeout(() => {
+                data.structured_results.forEach((vocab, index) => {
+                  if (vocab.structured) {
+                    const resultHtml = createVocabularyHtml(vocab.structured);
+                    addMessage(
+                      "bot",
+                      `<div class="vocabulary-result">${resultHtml}</div>`,
+                      true
+                    );
+                  }
+                });
+              }, 300);
+            } else {
+              // Regular chat response
+              addMessage("bot", data.message);
+            }
           } else {
             addMessage("bot", data.message);
           }

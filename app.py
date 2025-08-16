@@ -1231,36 +1231,23 @@ def semantic_search_api():
                 )
 
                 if search_result["success"]:
-                    # Format kết quả để hiển thị với similarity scores
-                    formatted_response = f"🔍 **Tìm thấy {search_result['count']} từ vựng liên quan đến '{query}' (Semantic Search):**\n\n"
-
-                    for i, word_data in enumerate(search_result["results"], 1):
-                        similarity_emoji = (
-                            "🎯"
-                            if word_data["similarity_score"] >= 0.7
-                            else "📍" if word_data["similarity_score"] >= 0.5 else "📌"
-                        )
-                        formatted_response += f"**{i}. {word_data['word'].upper()}** /{word_data['phonetic']}/ ({word_data['part_of_speech']}) {similarity_emoji} {word_data['similarity_score']}\n"
-                        formatted_response += (
-                            f"   📝 {word_data['vietnamese_meaning']}\n"
-                        )
-                        formatted_response += (
-                            f"   🏷️ Category: {word_data['category']}\n"
-                        )
-                        if word_data["example_sentences"]:
-                            formatted_response += (
-                                f"   💡 Ví dụ: {word_data['example_sentences'][0]}\n"
-                            )
-                        formatted_response += "\n"
-
+                    # Return only structured results for flashcard display
                     return jsonify(
                         {
                             "success": True,
-                            "message": formatted_response,
+                            "message": f"🔍 Tìm thấy {search_result['count']} từ vựng liên quan đến '{query}'",
                             "type": "semantic_search",
                             "query": query,
                             "results": search_result["results"],
                             "count": search_result["count"],
+                            "structured_results": [
+                                {
+                                    "word": vocab["word"],
+                                    "structured": vocab,
+                                    "formatted": format_vocabulary_result(vocab),
+                                }
+                                for vocab in search_result["results"]
+                            ],
                         }
                     )
                 else:
