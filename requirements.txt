@@ -1,0 +1,12 @@
+Flask==3.0.0
+transformers==4.36.2
+openai>=1.10.0
+torch>=2.6.0
+soundfile==0.12.1
+python-dotenv==1.0.0
+chromadb==0.4.22
+langchain-openai>=0.0.5
+langchain-core>=0.1.21
+langchain>=0.1.0
+langchain-community>=0.0.20
+pydantic>=2.5.3
