@@ -2068,7 +2068,7 @@ def faq_api():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-if __name__ == "__main__":
-    app.run(debug=True, port=6969)
+    # Get port from environment variable (for deployment) or use 5000 as default
+    port = int(os.environ.get("PORT", 5000))
+    # Run with host 0.0.0.0 to allow external connections
+    app.run(host="0.0.0.0", port=port, debug=False)
