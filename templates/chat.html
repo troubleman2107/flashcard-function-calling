@@ -504,9 +504,13 @@
       <div class="mode-selector">
         <button
           class="mode-btn active"
-          onclick="switchMode('chat')"
-          data-mode="chat"
+          onclick="switchMode('smart')"
+          data-mode="smart"
         >
+          <i class="bi bi-lightning-charge mode-icon"></i>
+          <span>Thông minh</span>
+        </button>
+        <button class="mode-btn" onclick="switchMode('chat')" data-mode="chat">
           <i class="bi bi-chat-dots mode-icon"></i>
           <span>Trò chuyện</span>
         </button>
@@ -534,13 +538,17 @@
             <br /><br />
             🎯 <strong>Chọn chế độ phù hợp:</strong>
             <br />
+            ⚡ <strong>Thông minh:</strong> AI tự hiểu ý định - tìm kiếm, thêm
+            từ, trò chuyện tự động
+            <br />
             💬 <strong>Trò chuyện:</strong> Hỏi đáp về tiếng Anh, học tập
             <br />
             📚 <strong>Thêm từ:</strong> Nhập từ tiếng Anh để phân tích và lưu
             <br />
             📄 <strong>Phân tích văn bản:</strong> Dán văn bản để trích xuất từ
             vựng <br /><br />
-            Hãy chọn chế độ và bắt đầu sử dụng!
+            🌟 <strong>Khuyến nghị:</strong> Dùng chế độ
+            <strong>"Thông minh"</strong> để có trải nghiệm tốt nhất!
           </div>
         </div>
       </div>
@@ -574,7 +582,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      let currentMode = "chat";
+      let currentMode = "smart";
 
       function createVocabularyHtml(data) {
         let html = '<div class="vocabulary-content">';
@@ -759,6 +767,9 @@
 
         // Send based on current mode
         switch (currentMode) {
+          case "smart":
+            sendToSmartAPI(message);
+            break;
           case "chat":
             sendToChatAPI(message);
             break;
@@ -769,7 +780,69 @@
             sendToAnalyzeAPI(message);
             break;
           default:
-            sendToChatAPI(message);
+            sendToSmartAPI(message);
+        }
+      }
+
+      async function sendToSmartAPI(message) {
+        try {
+          // Use the new intelligent chat API
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: message,
+            }),
+          });
+
+          const data = await response.json();
+          hideTyping();
+
+          if (data.success) {
+            // Add the agent's response
+            addMessage("bot", data.message);
+
+            // Check if there are any tool results to display
+            if (data.tool_results) {
+              setTimeout(() => {
+                // Handle different types of tool results
+                if (data.tool_results.vocabulary_results) {
+                  data.tool_results.vocabulary_results.forEach((vocab) => {
+                    if (vocab.structured) {
+                      const resultHtml = createVocabularyHtml(vocab.structured);
+                      addMessage(
+                        "bot",
+                        `<div class="vocabulary-result">${resultHtml}</div>`,
+                        true
+                      );
+                    }
+                  });
+                }
+
+                if (data.tool_results.search_results) {
+                  data.tool_results.search_results.forEach((vocab) => {
+                    const resultHtml = createVocabularyHtml(vocab);
+                    addMessage(
+                      "bot",
+                      `<div class="vocabulary-result">${resultHtml}</div>`,
+                      true
+                    );
+                  });
+                }
+              }, 300);
+            }
+          } else {
+            addMessage(
+              "bot",
+              data.message || "❌ Đã xảy ra lỗi. Vui lòng thử lại!"
+            );
+          }
+        } catch (error) {
+          hideTyping();
+          console.error("Smart API Error:", error);
+          addMessage("bot", "❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!");
         }
       }
 

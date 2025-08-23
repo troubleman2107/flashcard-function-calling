@@ -1144,28 +1144,28 @@
     }
   },
   {
-    "word": "assistant",
+    "word": "Assistant",
     "result": {
-      "formatted": "📚 **ASSISTANT** //əˈsɪstənt// (noun) 🟢 Beginner\n\n🇻🇳 **Nghĩa:** trợ lý\n\n📝 **Ví dụ:**\n1. She works as an assistant in a busy office.\n2. The assistant helped the manager organize the event.\n\n🔄 **Từ đồng nghĩa:** aide, helper, supporter\n\n💡 **Mẹo học dễ nhớ:**\nThink of an 'assistant' as someone who 'assists' you.",
+      "formatted": "📚 **ASSISTANT** //əˈsɪstənt// (noun) 🟡 Intermediate\n\n🇻🇳 **Nghĩa:** Trợ lý\n\n📝 **Ví dụ:**\n1. The assistant helped the manager organize the files.\n2. She works as a research assistant at the university.\n\n🔄 **Từ đồng nghĩa:** aide, helper, supporter\n\n💡 **Mẹo học dễ nhớ:**\nThink of an 'assistant' as someone who 'assists' you in your tasks.",
       "structured": {
-        "word": "assistant",
-        "vietnamese_meaning": "trợ lý",
+        "word": "Assistant",
+        "vietnamese_meaning": "Trợ lý",
         "part_of_speech": "noun",
         "phonetic": "/əˈsɪstənt/",
         "example_sentences": [
-          "She works as an assistant in a busy office.",
-          "The assistant helped the manager organize the event."
+          "The assistant helped the manager organize the files.",
+          "She works as a research assistant at the university."
         ],
-        "mnemonic_tip": "Think of an 'assistant' as someone who 'assists' you.",
-        "difficulty_level": "beginner",
+        "mnemonic_tip": "Think of an 'assistant' as someone who 'assists' you in your tasks.",
+        "difficulty_level": "intermediate",
         "synonyms": [
           "aide",
           "helper",
           "supporter"
         ]
       },
-      "audio_path": "/static/audio/assistant_f549cd73.wav",
-      "audio_text": "assistant. trợ lý.",
+      "audio_path": "/static/audio/Assistant_9b1363da.wav",
+      "audio_text": "Assistant. Trợ lý.",
       "category": "Business"
     }
   }

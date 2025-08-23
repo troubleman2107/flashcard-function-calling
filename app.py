@@ -116,7 +116,10 @@ class TTSService:
             self.tokenizer = AutoTokenizer.from_pretrained("facebook/mms-tts-eng")
             print("TTS models loaded successfully!")
         except Exception as e:
-            print(f"Error loading TTS models: {e}")
+            print(f"Warning: Could not load TTS models: {e}")
+            print(
+                "TTS functionality will be disabled. The app will continue to work without audio generation."
+            )
             self.model = None
             self.tokenizer = None
 
@@ -451,6 +454,70 @@ class VocabularyManager:
             print(f"Error getting categories stats: {e}")
             return {}
 
+    def _fallback_keyword_search(self, query, limit=10):
+        """
+        Fallback keyword-based search in ChromaDB when semantic search fails
+        """
+        try:
+            # Get all data from ChromaDB
+            all_data = self.collection.get(include=["metadatas", "documents"])
+
+            if not all_data["metadatas"]:
+                return []
+
+            query_lower = query.lower()
+            query_words = query_lower.split()
+
+            results = []
+            for i, metadata in enumerate(all_data["metadatas"]):
+                # Search in various fields
+                searchable_text = (
+                    f"{metadata.get('word', '')} "
+                    f"{metadata.get('vietnamese_meaning', '')} "
+                    f"{metadata.get('category', '')} "
+                    f"{metadata.get('example_sentences', '').replace('|', ' ')} "
+                    f"{metadata.get('synonyms', '').replace(',', ' ')}"
+                ).lower()
+
+                # Calculate relevance score based on keyword matches
+                relevance_score = 0
+                for word in query_words:
+                    if word in searchable_text:
+                        relevance_score += searchable_text.count(word)
+
+                if relevance_score > 0:
+                    result_item = {
+                        "word": metadata["word"],
+                        "vietnamese_meaning": metadata["vietnamese_meaning"],
+                        "category": metadata["category"],
+                        "part_of_speech": metadata["part_of_speech"],
+                        "example_sentences": metadata["example_sentences"].split("|"),
+                        "mnemonic_tip": metadata["mnemonic_tip"],
+                        "phonetic": metadata["phonetic"],
+                        "synonyms": (
+                            metadata["synonyms"].split(",")
+                            if metadata["synonyms"]
+                            else []
+                        ),
+                        "difficulty_level": metadata.get(
+                            "difficulty_level", "intermediate"
+                        ),
+                        "similarity_score": min(
+                            relevance_score / 10, 1.0
+                        ),  # Normalize score
+                        "source": "chromadb_keyword",
+                    }
+                    results.append(result_item)
+
+            # Sort by relevance score
+            results.sort(key=lambda x: x["similarity_score"], reverse=True)
+
+            return results[:limit]
+
+        except Exception as e:
+            print(f"Error in keyword search: {e}")
+            return []
+
 
 # Initialize Vocabulary Manager
 vocab_manager = VocabularyManager()
@@ -517,18 +584,138 @@ def semantic_search_vocabulary_tool(
         }
 
 
-# LangChain Agent for chat
-def create_vocabulary_agent():
-    """Create LangChain agent for vocabulary assistance"""
-    system_prompt = """Bạn là một trợ lý học từ vựng tiếng Anh thông minh.
-    
-    Khi người dùng hỏi về từ vựng liên quan đến một chủ đề, khái niệm, tình huống, hoặc cảm xúc 
-    (ví dụ: 'các từ liên quan đến du lịch', 'từ vựng về công nghệ', 'từ về cảm xúc vui buồn', 'words about happiness'),
-    hãy sử dụng tool semantic_search_vocabulary_tool để tìm kiếm trong cơ sở dữ liệu.
-    
-    Nếu không phải câu hỏi về tìm kiếm từ vựng, hãy trả lời bình thường như một trợ lý học tiếng Anh.
-    
-    Luôn trả lời bằng tiếng Việt và thân thiện."""
+@tool
+def add_single_vocabulary_tool(word: str) -> dict:
+    """Add a single English word to the vocabulary database with detailed analysis"""
+    try:
+        word = word.strip()
+        if not word:
+            return {"success": False, "message": "Vui lòng cung cấp từ cần thêm"}
+
+        # Check if word already exists
+        chromadb_exists = vocab_manager.word_exists(word)
+        history_exists = word_exists_in_history(word)
+
+        if chromadb_exists and history_exists:
+            return {
+                "success": False,
+                "message": f"⚠️ Từ '{word}' đã tồn tại trong flashcard!",
+                "duplicate": True,
+            }
+
+        # Analyze the word
+        result_data = explain_word(word)
+        if not result_data["structured"]:
+            return {"success": False, "message": f"❌ Không thể phân tích từ '{word}'"}
+
+        # Save to history and database
+        saved = save_to_history(word, result_data)
+        if saved:
+            return {
+                "success": True,
+                "message": f"✅ Đã thêm từ '{word}' vào flashcard!",
+                "word": word,
+                "formatted_result": result_data["formatted"],
+                "structured_data": result_data["structured"],
+                "audio_path": result_data.get("audio_path"),
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"⚠️ Từ '{word}' đã tồn tại trong flashcard!",
+                "duplicate": True,
+            }
+
+    except Exception as e:
+        return {"success": False, "message": f"Lỗi thêm từ vựng: {str(e)}"}
+
+
+@tool
+def analyze_text_vocabulary_tool(text: str) -> dict:
+    """Extract and add important vocabulary words from a text passage"""
+    try:
+        if not text.strip():
+            return {
+                "success": False,
+                "message": "Vui lòng cung cấp văn bản cần phân tích",
+            }
+
+        vocabulary_results = analyze_text_for_vocabulary(text)
+        if not vocabulary_results:
+            return {
+                "success": False,
+                "message": "❌ Không tìm thấy từ vựng quan trọng trong văn bản",
+            }
+
+        # Save vocabulary words
+        added_words = []
+        for vocab in vocabulary_results:
+            if save_to_history(vocab["word"], vocab):
+                added_words.append(vocab["word"])
+
+        return {
+            "success": True,
+            "message": f"✅ Đã thêm {len(added_words)} từ vào flashcard: {', '.join(added_words)}",
+            "results": vocabulary_results,
+            "added_words": added_words,
+            "count": len(added_words),
+        }
+
+    except Exception as e:
+        return {"success": False, "message": f"Lỗi phân tích văn bản: {str(e)}"}
+
+
+@tool
+def get_vocabulary_stats_tool() -> dict:
+    """Get statistics about the vocabulary database"""
+    try:
+        categories = vocab_manager.get_categories_stats()
+        history = get_history()
+
+        return {
+            "success": True,
+            "message": f"Thống kê từ vựng hiện tại",
+            "total_words": len(history),
+            "categories": categories,
+            "total_categories": len(categories),
+        }
+    except Exception as e:
+        return {"success": False, "message": f"Lỗi lấy thống kê: {str(e)}"}
+
+
+# Enhanced LangChain Agent for intelligent chat
+def create_intelligent_vocabulary_agent():
+    """Create enhanced LangChain agent that can handle multiple types of user requests"""
+    system_prompt = """Bạn là một trợ lý học từ vựng tiếng Anh thông minh và thân thiện.
+
+    Bạn có thể giúp người dùng trong các tình huống sau:
+
+    1. **Tìm kiếm từ vựng theo chủ đề**: Khi người dùng hỏi về từ vựng liên quan đến chủ đề nào đó
+       (ví dụ: "từ vựng về du lịch", "các từ liên quan đến công nghệ", "words about emotions")
+       → Sử dụng tool: semantic_search_vocabulary_tool
+
+    2. **Thêm từ đơn lẻ**: Khi người dùng muốn thêm một từ cụ thể vào flashcard
+       (ví dụ: "thêm từ happy", "add word computer", "giúp tôi thêm từ beautiful")
+       → Sử dụng tool: add_single_vocabulary_tool
+
+    3. **Phân tích văn bản**: Khi người dùng cung cấp một đoạn văn bản và muốn trích xuất từ vựng
+       (ví dụ: "phân tích đoạn văn này", "extract vocabulary from this text")
+       → Sử dụng tool: analyze_text_vocabulary_tool
+
+    4. **Thống kê từ vựng**: Khi người dùng hỏi về số lượng từ, categories, thống kê
+       (ví dụ: "có bao nhiêu từ", "thống kê từ vựng", "vocabulary statistics")
+       → Sử dụng tool: get_vocabulary_stats_tool
+
+    5. **Trò chuyện thông thường**: Khi người dùng chào hỏi, hỏi về cách sử dụng, hoặc các câu hỏi chung
+       → Trả lời trực tiếp, thân thiện và hữu ích
+
+    QUAN TRỌNG:
+    - Phân tích ý định của người dùng một cách thông minh
+    - Luôn trả lời bằng tiếng Việt
+    - Khi sử dụng tools, hãy giải thích kết quả một cách dễ hiểu
+    - Nếu không chắc chắn về ý định, hãy hỏi lại người dùng
+    - Luôn thân thiện và khuyến khích người dùng học tập
+    """
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -539,18 +726,28 @@ def create_vocabulary_agent():
         ]
     )
 
-    tools = [semantic_search_vocabulary_tool]
+    tools = [
+        semantic_search_vocabulary_tool,
+        add_single_vocabulary_tool,
+        analyze_text_vocabulary_tool,
+        get_vocabulary_stats_tool,
+    ]
 
     agent = create_openai_functions_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(
-        agent=agent, tools=tools, memory=memory, verbose=True
+        agent=agent,
+        tools=tools,
+        memory=memory,
+        verbose=True,
+        max_iterations=3,
+        early_stopping_method="generate",
     )
 
     return agent_executor
 
 
-# Create the agent
-vocab_agent = create_vocabulary_agent()
+# Create the enhanced agent
+vocab_agent = create_intelligent_vocabulary_agent()
 
 
 # Enhanced functions using LangChain
@@ -1046,7 +1243,55 @@ def chat():
 
 @app.route("/api/chat", methods=["POST"])
 def chat_api():
-    """API for processing chat messages"""
+    """Enhanced API for intelligent chat processing using LangChain agent"""
+    data = request.get_json()
+    message = data.get("message", "").strip()
+
+    if not message:
+        return jsonify({"success": False, "message": "Vui lòng nhập nội dung"})
+
+    try:
+        # Use the intelligent vocabulary agent to process the message
+        response = vocab_agent.invoke({"input": message})
+
+        # Extract the response content
+        if isinstance(response, dict):
+            agent_response = response.get("output", str(response))
+        else:
+            agent_response = str(response)
+
+        # Check if the agent used any tools by looking for specific patterns in the response
+        used_tools = []
+        tool_results = {}
+
+        # Try to extract structured data from tool usage
+        # This is a simplified approach - in practice, you might want to modify the agent to return more structured data
+
+        return jsonify(
+            {
+                "success": True,
+                "message": agent_response,
+                "type": "intelligent_chat",
+                "used_tools": used_tools,
+                "tool_results": tool_results,
+                "timestamp": time.time(),
+            }
+        )
+
+    except Exception as e:
+        print(f"Error in intelligent chat: {e}")
+        return jsonify(
+            {
+                "success": False,
+                "message": f"❌ Đã xảy ra lỗi: {str(e)}",
+                "error_type": "agent_error",
+            }
+        )
+
+
+@app.route("/api/chat-legacy", methods=["POST"])
+def chat_api_legacy():
+    """Legacy API for processing chat messages with explicit types (kept for backward compatibility)"""
     data = request.get_json()
     message = data.get("message", "").strip()
     chat_type = data.get("type", "")
@@ -1354,70 +1599,6 @@ def semantic_search_api():
         return jsonify(
             {"success": False, "message": f"⚠️ Đã xảy ra lỗi tìm kiếm: {str(e)}"}
         )
-
-
-# Add the keyword search method to VocabularyManager class
-def _fallback_keyword_search(self, query, limit=10):
-    """
-    Fallback keyword-based search in ChromaDB when semantic search fails
-    """
-    try:
-        # Get all data from ChromaDB
-        all_data = self.collection.get(include=["metadatas", "documents"])
-
-        if not all_data["metadatas"]:
-            return []
-
-        query_lower = query.lower()
-        query_words = query_lower.split()
-
-        results = []
-        for i, metadata in enumerate(all_data["metadatas"]):
-            # Search in various fields
-            searchable_text = (
-                f"{metadata.get('word', '')} "
-                f"{metadata.get('vietnamese_meaning', '')} "
-                f"{metadata.get('category', '')} "
-                f"{metadata.get('example_sentences', '').replace('|', ' ')} "
-                f"{metadata.get('synonyms', '').replace(',', ' ')}"
-            ).lower()
-
-            # Calculate relevance score based on keyword matches
-            relevance_score = 0
-            for word in query_words:
-                if word in searchable_text:
-                    relevance_score += searchable_text.count(word)
-
-            if relevance_score > 0:
-                result_item = {
-                    "word": metadata["word"],
-                    "vietnamese_meaning": metadata["vietnamese_meaning"],
-                    "category": metadata["category"],
-                    "part_of_speech": metadata["part_of_speech"],
-                    "example_sentences": metadata["example_sentences"].split("|"),
-                    "mnemonic_tip": metadata["mnemonic_tip"],
-                    "phonetic": metadata["phonetic"],
-                    "synonyms": (
-                        metadata["synonyms"].split(",") if metadata["synonyms"] else []
-                    ),
-                    "difficulty_level": metadata.get(
-                        "difficulty_level", "intermediate"
-                    ),
-                    "similarity_score": min(
-                        relevance_score / 10, 1.0
-                    ),  # Normalize score
-                    "source": "chromadb_keyword",
-                }
-                results.append(result_item)
-
-        # Sort by relevance score
-        results.sort(key=lambda x: x["similarity_score"], reverse=True)
-
-        return results[:limit]
-
-    except Exception as e:
-        print(f"Error in keyword search: {e}")
-        return []
 
 
 @app.route("/list")
