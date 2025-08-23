@@ -154,8 +154,22 @@ class TTSService:
             return None
 
 
-# Initialize TTS service
-tts_service = TTSService()
+# Initialize TTS service lazily to avoid startup delays in deployment
+tts_service = None
+
+
+def get_tts_service():
+    """Get TTS service instance, creating it if needed"""
+    global tts_service
+    if tts_service is None:
+        try:
+            print("Initializing TTS service...")
+            tts_service = TTSService()
+            print("TTS service initialized successfully")
+        except Exception as e:
+            print(f"Warning: TTS service initialization failed: {e}")
+            tts_service = False  # Mark as failed to avoid retrying
+    return tts_service if tts_service is not False else None
 
 
 # Vocabulary Management with ChromaDB (enhanced with LangChain)
@@ -979,10 +993,12 @@ def save_to_history(word, result):
 
     if result.get("structured") and result["structured"].get("vietnamese_meaning"):
         vietnamese_meaning = result["structured"]["vietnamese_meaning"]
-        audio_path = tts_service.generate_audio(word, vietnamese_meaning)
-        if audio_path:
-            result["audio_path"] = audio_path
-            result["audio_text"] = f"{word}. {vietnamese_meaning}."
+        tts = get_tts_service()
+        if tts:
+            audio_path = tts.generate_audio(word, vietnamese_meaning)
+            if audio_path:
+                result["audio_path"] = audio_path
+                result["audio_text"] = f"{word}. {vietnamese_meaning}."
 
         if not chromadb_exists:
             try:
@@ -1232,6 +1248,12 @@ def index():
     history = history[::-1]
 
     return render_template("index.html", result=result, word=word, history=history)
+
+
+@app.route("/health")
+def health_check():
+    """Health check endpoint for deployment platforms"""
+    return {"status": "healthy", "message": "Flashcard app is running"}, 200
 
 
 @app.route("/chat")
@@ -1916,10 +1938,12 @@ def generate_audio_api(word):
                     "vietnamese_meaning"
                 ):
                     vietnamese_meaning = result["structured"]["vietnamese_meaning"]
-                    audio_path = tts_service.generate_audio(word, vietnamese_meaning)
-                    if audio_path:
-                        result["audio_path"] = audio_path
-                        result["audio_text"] = f"{word}. {vietnamese_meaning}."
+                    tts = get_tts_service()
+                    if tts:
+                        audio_path = tts.generate_audio(word, vietnamese_meaning)
+                        if audio_path:
+                            result["audio_path"] = audio_path
+                            result["audio_text"] = f"{word}. {vietnamese_meaning}."
 
                         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                             json.dump(history, f, ensure_ascii=False, indent=2)
@@ -2070,5 +2094,7 @@ def faq_api():
 if __name__ == "__main__":
     # Get port from environment variable (for deployment) or use 5000 as default
     port = int(os.environ.get("PORT", 5000))
+    print(f"Starting Flask app on host 0.0.0.0:{port}")
+
     # Run with host 0.0.0.0 to allow external connections
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
