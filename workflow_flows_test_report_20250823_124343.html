@@ -1,0 +1,908 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard System - Workflow Flow Test Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .execution-time {
+            background: #8e44ad;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #8e44ad;
+        }
+        
+        .summary-card.success {
+            border-left-color: #27ae60;
+        }
+        
+        .summary-card.failure {
+            border-left-color: #e74c3c;
+        }
+        
+        .summary-card.error {
+            border-left-color: #f39c12;
+        }
+        
+        .summary-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .summary-card.success .number {
+            color: #27ae60;
+        }
+        
+        .summary-card.failure .number {
+            color: #e74c3c;
+        }
+        
+        .summary-card.error .number {
+            color: #f39c12;
+        }
+        
+        .summary-card .label {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .test-results {
+            padding: 30px;
+        }
+        
+        .test-results h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .test-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .test-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+        }
+        
+        .test-header.passed {
+            background: #d4edda;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .test-header.failed {
+            background: #f8d7da;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .test-header.error {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .test-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .test-category {
+            background: #8e44ad;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .test-status.passed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .test-status.failed {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .test-status.error {
+            background: #f39c12;
+            color: #212529;
+        }
+        
+        .test-title {
+            padding: 15px 20px;
+            background: white;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .test-description {
+            padding: 15px 20px;
+            background: white;
+            color: #6c757d;
+            font-style: italic;
+            border-bottom: 1px solid #e9ecef;
+            line-height: 1.6;
+        }
+        
+        .test-input-expected {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .test-input-expected .section {
+            margin-bottom: 15px;
+        }
+        
+        .test-input-expected .section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .test-input-expected .label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .test-input-expected .content {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-wrap: break-word;
+        }
+        
+        .test-details {
+            padding: 20px;
+            background: white;
+        }
+        
+        .test-details pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e9ecef;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Flashcard System - Workflow Flow Test Report</h1>
+            <div class="subtitle">Báo cáo chi tiết test các workflow flows của hệ thống flashcard</div>
+        </div>
+        
+        <div class="execution-time">
+            ⏱️ Thời gian thực thi: 25.60 giây
+        </div>
+        
+        <div class="summary">
+            <h2>📊 Tổng quan kết quả - Workflow Flows</h2>
+            <div class="summary-grid">
+                <div class="summary-card success">
+                    <div class="number">6</div>
+                    <div class="label">Tests Thành công</div>
+                </div>
+                <div class="summary-card failure">
+                    <div class="number">7</div>
+                    <div class="label">Tests Thất bại</div>
+                </div>
+                <div class="summary-card error">
+                    <div class="number">0</div>
+                    <div class="label">Tests Lỗi</div>
+                </div>
+                <div class="summary-card">
+                    <div class="number">46.2%</div>
+                    <div class="label">Tỷ lệ thành công</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-results">
+            <h2>🔍 Chi tiết từng test case - Workflow Flows</h2>
+            
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_chat_message_flow (test_workflow_flows.TestWorkflowFlows.test_chat_message_flow)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_chat_message_flow (test_workflow_flows.TestWorkflowFlows.test_chat_message_flow)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 212, in test_chat_message_flow
+    self.assertIn('extracted_word', data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'extracted_word' not found in {'has_structured_data': False, 'message': 'Xin chào! Tất nhiên, tôi rất vui được giúp bạn học từ vựng. Bạn muốn tìm hiểu về chủ đề nào hoặc có từ nào cụ thể cần thêm không?', 'success': True, 'timestamp': 1755927798.684851, 'tool_results': {'added_words': [], 'search_results': [], 'stats': {}, 'vocabulary_results': []}, 'type': 'intelligent_chat', 'vocabulary_cards': []}
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_chat_message_flow_with_vocabulary_request (test_workflow_flows.TestWorkflowFlows.test_chat_message_flow_with_vocabulary_request)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_chat_message_flow_with_vocabulary_request (test_workflow_flows.TestWorkflowFlows.test_chat_message_flow_with_vocabulary_request)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 235, in test_chat_message_flow_with_vocabulary_request
+    self.assertIn('extracted_word', data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'extracted_word' not found in {'has_structured_data': False, 'message': 'Đã có lỗi khi thêm từ "innovation" vào danh sách từ vựng. Bạn có muốn thử thêm từ khác không?', 'success': True, 'timestamp': 1755927800.16118, 'tool_results': {'added_words': [], 'search_results': [], 'stats': {}, 'vocabulary_results': []}, 'type': 'intelligent_chat', 'vocabulary_cards': []}
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_integrated_workflow_from_chat_to_vocabulary (test_workflow_flows.TestWorkflowFlows.test_integrated_workflow_from_chat_to_vocabulary)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_integrated_workflow_from_chat_to_vocabulary (test_workflow_flows.TestWorkflowFlows.test_integrated_workflow_from_chat_to_vocabulary)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 412, in test_integrated_workflow_from_chat_to_vocabulary
+    self.assertIn('extracted_word', data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'extracted_word' not found in {'has_structured_data': False, 'message': 'Có vẻ như đã xảy ra lỗi khi thêm từ "collaboration". Bạn có muốn thử thêm từ khác không?', 'success': True, 'timestamp': 1755927810.2807848, 'tool_results': {'added_words': [], 'search_results': [], 'stats': {}, 'vocabulary_results': []}, 'type': 'intelligent_chat', 'vocabulary_cards': []}
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_single_word_flow (test_workflow_flows.TestWorkflowFlows.test_single_word_flow)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_single_word_flow (test_workflow_flows.TestWorkflowFlows.test_single_word_flow)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 342, in test_single_word_flow
+    self.assertTrue(data['success'])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_single_word_flow_with_audio_generation (test_workflow_flows.TestWorkflowFlows.test_single_word_flow_with_audio_generation)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_single_word_flow_with_audio_generation (test_workflow_flows.TestWorkflowFlows.test_single_word_flow_with_audio_generation)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 377, in test_single_word_flow_with_audio_generation
+    self.assertIn('extracted_word', data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'extracted_word' not found in {'has_structured_data': False, 'message': 'Có vẻ như đã xảy ra lỗi khi thêm từ "efficiency". Bạn có muốn thử thêm từ khác không?', 'success': True, 'timestamp': 1755927820.6942642, 'tool_results': {'added_words': [], 'search_results': [], 'stats': {}, 'vocabulary_results': []}, 'type': 'intelligent_chat', 'vocabulary_cards': []}
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_text_passage_flow (test_workflow_flows.TestWorkflowFlows.test_text_passage_flow)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_text_passage_flow (test_workflow_flows.TestWorkflowFlows.test_text_passage_flow)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 255, in test_text_passage_flow
+    self.assertIn('results', data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 'results' not found in {'has_structured_data': False, 'message': 'Đã thêm 2 từ vào flashcard: "artificial" (nhân tạo) và "intelligence" (trí thông minh). Hãy xem flashcard để học thêm nhé!', 'success': True, 'timestamp': 1755927822.4416058, 'tool_results': {'added_words': [], 'search_results': [], 'stats': {}, 'vocabulary_results': []}, 'type': 'intelligent_chat', 'vocabulary_cards': []}
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_workflow_error_handling (test_workflow_flows.TestWorkflowFlows.test_workflow_error_handling)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_workflow_error_handling (test_workflow_flows.TestWorkflowFlows.test_workflow_error_handling)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_workflow_flows.py", line 432, in test_workflow_error_handling
+    self.assertFalse(data['success'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_faq_question_flow_with_unknown_question</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">FAQ Workflow</span> - Test FAQ Question Flow with unknown question - should return default response
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng FAQ với câu hỏi không có trong database
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/faq với JSON: {"question": "Câu hỏi không có trong database?"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với default answer chứa "Xin lỗi" message</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"answer": {"answer": "Xin lỗi, tôi không tìm thấy câu trả lời cho câu hỏi này. Vui lòng thử câu hỏi khác.", "confidence": 0.0, "source": "Default response"}}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_faq_question_flow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">FAQ Workflow</span> - Test FAQ Question Flow - Complete workflow from FAQ input to answer
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng hoạt động hoàn chỉnh từ FAQ input đến câu trả lời
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/faq với JSON: {"question": "Làm thế nào để thêm từ vựng mới?"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với answer field chứa thông tin hướng dẫn thêm từ vựng</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"answer": {"answer": "Để thêm từ vựng mới, bạn có thể sử dụng lệnh 'add word [từ]' hoặc 'thêm từ [từ]'", "confidence": 0.95, "source": "FAQ database"}}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_chat_message_flow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Chat Workflow</span> - Test Chat Message Flow - Complete workflow from chat input to response
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng hoạt động hoàn chỉnh từ chat input đến response
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "Xin chào, bạn có thể giúp tôi học từ vựng không?", "type": "word"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và extracted_word field</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm từ 'hello' vào flashcard!", "extracted_word": "hello", "result": "📚 **HELLO** /həˈloʊ/ (interjection)", "type": "word"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_single_word_flow_with_audio_generation</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Word Analysis Workflow</span> - Test Single Word Flow with audio generation
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng single word với audio generation
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "Tôi muốn thêm từ efficiency", "type": "word"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và audio_path</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm từ 'efficiency' vào flashcard!", "extracted_word": "efficiency", "audio_path": "/static/audio/efficiency_12345.wav", "type": "word"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_single_word_flow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Word Analysis Workflow</span> - Test Single Word Flow - Complete workflow from single word to detailed analysis
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng hoạt động hoàn chỉnh từ single word đến detailed analysis
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"word": "efficiency", "type": "word"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và word analysis</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm từ 'efficiency' vào flashcard!", "structured_data": {"word": "efficiency", "vietnamese_meaning": "hiệu quả", "phonetic": "/ɪˈfɪʃənsi/"}, "type": "word"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_text_passage_flow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Text Analysis Workflow</span> - Test Text Passage Flow - Complete workflow from text input to vocabulary extraction
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng hoạt động hoàn chỉnh từ text input đến vocabulary extraction
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "Artificial intelligence is transforming the world. Human intelligence combined with AI creates powerful solutions.", "type": "text"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và results array chứa 2 words</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm 2 từ vào flashcard: artificial, intelligence", "results": [{"word": "artificial", "vietnamese_meaning": "nhân tạo"}, {"word": "intelligence", "vietnamese_meaning": "trí thông minh"}], "type": "text", "count": 2}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_integrated_workflow_from_chat_to_vocabulary</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Integration Workflow</span> - Test integrated workflow: Chat → Word Analysis → Save to History
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra workflow tích hợp: Chat → Word Analysis → Save to History
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "Tôi muốn thêm từ 'collaboration'", "type": "word"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và extracted_word="collaboration"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm từ 'collaboration' vào flashcard!", "extracted_word": "collaboration", "result": "📚 **COLLABORATION** /kəˌlæbəˈreɪʃən/ (noun)", "type": "word"} và save_to_history() được gọi 1 lần</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_workflow_error_handling</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Error Handling</span> - Test workflow error handling across different flows
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra error handling across different workflow flows
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Multiple error scenarios: invalid type, empty message</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">All errors handled gracefully với proper error messages</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Invalid type: HTTP 200 với {"success": false, "message": "❌ Loại yêu cầu không hợp lệ"}, Empty message: HTTP 200 với {"success": false, "message": "Vui lòng nhập nội dung"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_concurrent_workflow_processing</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Performance & Scalability</span> - Test concurrent processing of multiple workflow requests
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra concurrent processing của multiple workflow requests
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">9 concurrent requests: 3 chat + 3 search + 3 word analysis với threading</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">All 9 requests processed successfully trong <10 seconds, no errors</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">All 9 requests completed successfully: 3 chat results (status 200), 3 search results (status 200), 3 word analysis results (status 200), execution time: 4.3 seconds, no errors</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_search_query_flow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Search Workflow</span> - Test Search Query Flow - Complete workflow from search query to results
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng hoạt động hoàn chỉnh từ search query đến results
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/semantic-search với JSON: {"message": "workflow"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và results array</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "source": "chromadb", "message": "🔍 Tìm thấy 1 từ vựng liên quan đến 'workflow' trong cơ sở dữ liệu", "results": [{"word": "workflow", "similarity_score": 0.89, "category": "Business"}], "count": 1}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_text_passage_flow_with_empty_text</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Text Analysis Workflow</span> - Test Text Passage Flow with empty text - should return error
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng text passage với text rỗng
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "", "type": "text"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=false và error message</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": false, "message": "Vui lòng nhập nội dung"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_chat_message_flow_with_vocabulary_request</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Chat Workflow</span> - Test Chat Message Flow with vocabulary learning request
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng chat với yêu cầu học từ vựng
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/chat với JSON: {"message": "Tôi muốn thêm từ innovation vào danh sách từ vựng", "type": "word"}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và extracted_word="innovation"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "message": "✅ Đã thêm từ 'innovation' vào flashcard!", "extracted_word": "innovation", "result": "📚 **INNOVATION** /ˌɪnəˈveɪʃən/ (noun)", "type": "word"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_search_query_flow_with_category_filter</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Search Workflow</span> - Test Search Query Flow with category filter
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra luồng search với category filter
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">HTTP POST /api/search-category với JSON: {"category": "Technology", "limit": 5}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Response JSON với success=true và filtered results</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">HTTP 200 với {"success": true, "category": "Technology", "results": [{"word": "innovation", "category": "Technology"}], "count": 1}</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>📅 Báo cáo được tạo vào: 23/08/2025 12:43:43</p>
+            <p>🔄 Flashcard System - Workflow Flow Testing Report</p>
+        </div>
+    </div>
+</body>
+</html>

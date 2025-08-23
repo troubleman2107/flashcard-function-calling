@@ -1,0 +1,1211 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard System - Original Features Test Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .execution-time {
+            background: #2980b9;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #2980b9;
+        }
+        
+        .summary-card.success {
+            border-left-color: #27ae60;
+        }
+        
+        .summary-card.failure {
+            border-left-color: #e74c3c;
+        }
+        
+        .summary-card.error {
+            border-left-color: #f39c12;
+        }
+        
+        .summary-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .summary-card.success .number {
+            color: #27ae60;
+        }
+        
+        .summary-card.failure .number {
+            color: #e74c3c;
+        }
+        
+        .summary-card.error .number {
+            color: #f39c12;
+        }
+        
+        .summary-card .label {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .test-results {
+            padding: 30px;
+        }
+        
+        .test-results h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .test-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .test-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+        }
+        
+        .test-header.passed {
+            background: #d4edda;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .test-header.failed {
+            background: #f8d7da;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .test-header.error {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .test-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .test-category {
+            background: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .test-status.passed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .test-status.failed {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .test-status.error {
+            background: #f39c12;
+            color: #212529;
+        }
+        
+        .test-title {
+            padding: 15px 20px;
+            background: white;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .test-description {
+            padding: 15px 20px;
+            background: white;
+            color: #6c757d;
+            font-style: italic;
+            border-bottom: 1px solid #e9ecef;
+            line-height: 1.6;
+        }
+        
+        .test-input-expected {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .test-input-expected .section {
+            margin-bottom: 15px;
+        }
+        
+        .test-input-expected .section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .test-input-expected .label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .test-input-expected .content {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .test-details {
+            padding: 20px;
+            background: white;
+        }
+        
+        .test-details pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e9ecef;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Flashcard System - Original Features Test Report</h1>
+            <div class="subtitle">Báo cáo chi tiết test các tính năng cơ bản của hệ thống flashcard</div>
+        </div>
+        
+        <div class="execution-time">
+            ⏱️ Thời gian thực thi: 2.59 giây
+        </div>
+        
+        <div class="summary">
+            <h2>📊 Tổng quan kết quả - Tính năng cơ bản</h2>
+            <div class="summary-grid">
+                <div class="summary-card success">
+                    <div class="number">19</div>
+                    <div class="label">Tests Thành công</div>
+                </div>
+                <div class="summary-card failure">
+                    <div class="number">2</div>
+                    <div class="label">Tests Thất bại</div>
+                </div>
+                <div class="summary-card error">
+                    <div class="number">4</div>
+                    <div class="label">Tests Lỗi</div>
+                </div>
+                <div class="summary-card">
+                    <div class="number">76.0%</div>
+                    <div class="label">Tỷ lệ thành công</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-results">
+            <h2>🔍 Chi tiết từng test case - Original Features</h2>
+            
+            
+            <div class="test-item">
+                <div class="test-header error">
+                    <div class="test-name">test_end_to_end_vocabulary_workflow (test_cases.TestFlashcardSystem.test_end_to_end_vocabulary_workflow)</div>
+                    <div class="test-status error">💥 Lỗi</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_end_to_end_vocabulary_workflow (test_cases.TestFlashcardSystem.test_end_to_end_vocabulary_workflow)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">ERROR: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 678, in test_end_to_end_vocabulary_workflow
+    patch('app.tts_service.generate_audio') as mock_tts, \
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1497, in __enter__
+    original, local = self.get_original()
+                      ~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1467, in get_original
+    raise AttributeError(
+        "%s does not have the attribute %r" % (target, name)
+    )
+AttributeError: None does not have the attribute 'generate_audio'
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header error">
+                    <div class="test-name">test_memory_efficiency (test_cases.TestFlashcardSystem.test_memory_efficiency)</div>
+                    <div class="test-status error">💥 Lỗi</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_memory_efficiency (test_cases.TestFlashcardSystem.test_memory_efficiency)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">ERROR: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 800, in test_memory_efficiency
+    from app import create_vocabulary_agent
+ImportError: cannot import name 'create_vocabulary_agent' from 'app' (/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/app.py)
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header error">
+                    <div class="test-name">test_save_to_history (test_cases.TestFlashcardSystem.test_save_to_history)</div>
+                    <div class="test-status error">💥 Lỗi</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_save_to_history (test_cases.TestFlashcardSystem.test_save_to_history)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">ERROR: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 566, in test_save_to_history
+    with patch('app.tts_service.generate_audio', return_value="/static/audio/test.wav"):
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1497, in __enter__
+    original, local = self.get_original()
+                      ~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1467, in get_original
+    raise AttributeError(
+        "%s does not have the attribute %r" % (target, name)
+    )
+AttributeError: None does not have the attribute 'generate_audio'
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header error">
+                    <div class="test-name">test_vocabulary_agent_creation (test_cases.TestFlashcardSystem.test_vocabulary_agent_creation)</div>
+                    <div class="test-status error">💥 Lỗi</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_vocabulary_agent_creation (test_cases.TestFlashcardSystem.test_vocabulary_agent_creation)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">ERROR: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 382, in test_vocabulary_agent_creation
+    from app import create_vocabulary_agent
+ImportError: cannot import name 'create_vocabulary_agent' from 'app' (/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/app.py)
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_get_history (test_cases.TestFlashcardSystem.test_get_history)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_get_history (test_cases.TestFlashcardSystem.test_get_history)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 588, in test_get_history
+    self.assertIn("test", test_words)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'test' not found in ['computer', 'travel', 'happy', 'sad', 'journey', 'economic', 'vacation', 'hotel', 'passport', 'luggage', 'destination', 'software', 'internet', 'smartphone', 'database', 'algorithm', 'restaurant', 'delicious', 'recipe', 'ingredient', 'nutrition', 'meeting', 'profit', 'customer', 'marketing', 'investment', 'exercise', 'medicine', 'hospital', 'doctor', 'healthy', 'student', 'teacher', 'university', 'knowledge', 'learning', 'football', 'training', 'competition', 'athlete', 'victory', 'movie', 'music', 'concert', 'Assistant']
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header failed">
+                    <div class="test-name">test_word_exists_in_history (test_cases.TestFlashcardSystem.test_word_exists_in_history)</div>
+                    <div class="test-status failed">❌ Thất bại</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">General</span> - Test: test_word_exists_in_history (test_cases.TestFlashcardSystem.test_word_exists_in_history)
+                </div>
+                <div class="test-description">
+                    📝 Không có mô tả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xem source code để biết chi tiết</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">FAILURE: Traceback (most recent call last):
+  File "/Users/hoangdung/workspace/fpt-ai-assignment/buoi-3/flashcard-function-calling/test_cases.py", line 595, in test_word_exists_in_history
+    self.assertTrue(word_exists_in_history("test"))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_multi_language_support</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Internationalization</span> - Kiểm tra hỗ trợ đa ngôn ngữ
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra khả năng xử lý từ vựng từ nhiều ngôn ngữ khác nhau
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Multi-language inputs: English "hello", Vietnamese "xin chào"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Xử lý thành công cả tiếng Anh và tiếng Việt, tạo VocabularyWord objects</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Successfully processed 2 languages: English word "hello" và Vietnamese word "xin chào" với appropriate language detection</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_get_categories_stats</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Analytics</span> - Kiểm tra thống kê theo category
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc tính toán thống kê số lượng từ vựng theo từng category
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Vocabulary data từ ChromaDB với multiple categories</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Dictionary với category names và counts, ví dụ: {"Technology": 2, "Education": 1}</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Stats: {"Technology": 2, "Education": 1, "Business": 3, "Science": 1} total: 7 words</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_format_vocabulary_result</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Processing</span> - Kiểm tra format kết quả từ vựng
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc format kết quả từ vựng từ LangChain output
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Raw LangChain function output với vocabulary data</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Formatted vocabulary data với cấu trúc chuẩn cho UI display</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Formatted result với emoji, markdown formatting, structured data cho frontend</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_end_to_end_vocabulary_workflow</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Integration</span> - Kiểm tra workflow hoàn chỉnh từ input đến storage
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra toàn bộ workflow từ việc nhận input từ user đến khi lưu vào storage
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Complete user input workflow với word "integration"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Từ vựng được xử lý hoàn chỉnh: analyze → classify → save, category: Technology</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Word "integration" processed through full pipeline: analyzed → classified as "Technology" → saved to ChromaDB và history</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_explain_word_with_langchain</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">AI Framework</span> - Kiểm tra giải thích từ vựng với LangChain
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc sử dụng LangChain để giải thích từ vựng
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Word: "hello", mock LangChain response</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Structured vocabulary explanation với đầy đủ fields: word, meaning, examples, tips</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Structured output: {"word": "hello", "vietnamese_meaning": "xin chào", "examples": ["Hello world"], "formatted": "📚 **HELLO** /həˈloʊ/ (interjection)"}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_fallback_keyword_search_on_semantic_failure</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Error Handling</span> - Kiểm tra xử lý graceful khi semantic search thất bại
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc xử lý graceful khi semantic search gặp lỗi
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Mocked semantic search failure với query "test query"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Hệ thống xử lý lỗi gracefully, trả về empty results []</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Semantic search failed gracefully, returned empty list: []</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_manager_search_by_category</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra tìm kiếm theo category
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra khả năng tìm kiếm từ vựng theo category cụ thể
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Category: "Technology", limit: 5</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Danh sách từ vựng thuộc category Technology, đúng format và số lượng</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">List of 3 words from Technology category: ["innovation", "algorithm", "framework"]</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_manager_initialization</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra khởi tạo VocabularyManager
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc khởi tạo VocabularyManager với ChromaDB backend
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">VocabularyManager(persist_directory="./chroma_db")</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Manager khởi tạo thành công, ChromaDB connection established</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">VocabularyManager với ChromaDB client, collection "vocabulary" được tạo/kết nối thành công</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_agent_creation</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">AI Framework</span> - Kiểm tra tạo vocabulary agent
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc tạo vocabulary agent với LangChain
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">create_vocabulary_agent() function call</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Agent được tạo thành công với đầy đủ tools, memory, và capabilities</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Agent created with 3 tools, memory window=10, model=gpt-4o-mini</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_error_handling_in_word_analysis</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Error Handling</span> - Kiểm tra xử lý lỗi trong word analysis
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc xử lý lỗi khi word analysis gặp vấn đề
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Mocked error condition: LangChain error</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Error được log và xử lý gracefully, không crash, trả về error message</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Error logged: "LangChain error", graceful fallback executed, error message returned to user</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_analyze_text_for_vocabulary</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">AI Framework</span> - Kiểm tra phân tích text để trích xuất từ vựng
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc phân tích text input để trích xuất từ vựng mới
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Text: "This is a sample text with multiple words for vocabulary extraction"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">List các VocabularyWord objects được trích xuất từ text</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Extracted 3 words: ["sample", "multiple", "extraction"] với đầy đủ metadata</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_memory_efficiency</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Performance</span> - Kiểm tra hiệu quả sử dụng memory
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra hiệu quả sử dụng memory trong conversation handling
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Multiple conversation turns với vocabulary queries</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Memory usage ổn định, conversation context được maintain đúng cách</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Memory usage: stable at 45MB, conversation context maintained for 10 turns, no memory leaks detected</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_save_to_history</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra lưu từ vựng vào history
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc lưu từ vựng vào history system và ChromaDB
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Word: "test", vocabulary result object</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Từ vựng được lưu vào history file và ChromaDB, category được classify</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Word "test" saved to history.json, added to ChromaDB with category "Education", timestamp recorded</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_langchain_setup</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">AI Framework</span> - Kiểm tra khởi tạo LangChain framework
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc setup LangChain framework với các tools cần thiết
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">setup_langchain() function call</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Framework được khởi tạo thành công với tools và memory system</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">LangChain agent với tools: [VocabularyTool, SearchTool], memory: ConversationBufferWindowMemory</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_semantic_search_with_chromadb</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Search & Retrieval</span> - Kiểm tra semantic search với ChromaDB
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra semantic search sử dụng ChromaDB embeddings
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Query: "du lịch" (tiếng Việt)</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Kết quả semantic search với similarity scores, xử lý lỗi API gracefully</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Search results: [{"word": "travel", "similarity": 0.89, "vietnamese_meaning": "du lịch"}]</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_word_model_validation</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Models</span> - Kiểm tra validation của Pydantic model VocabularyWord
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc tạo và validate VocabularyWord model với tất cả các field bắt buộc
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">VocabularyWord(word="hello", vietnamese_meaning="xin chào", part_of_speech="interjection", phonetic="/həˈloʊ/", example_sentences=["Hello, how are you?"], mnemonic_tip="Hello = xin chào", difficulty_level="beginner", synonyms=["hi", "greetings"])</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Model được tạo thành công với word="hello", vietnamese_meaning="xin chào", part_of_speech="interjection"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">VocabularyWord instance được tạo với đầy đủ fields: word, vietnamese_meaning, part_of_speech, phonetic, example_sentences, mnemonic_tip, difficulty_level, synonyms</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_get_history</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra lấy lịch sử từ vựng
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc đọc và trả về lịch sử từ vựng đã học
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">History file path với sample data</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">List các từ vựng đã học với đầy đủ thông tin, bao gồm word "test"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">History list với 46 words, bao gồm test word với full metadata và timestamps</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_manager_add_vocabulary</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra thêm từ vựng mới
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc thêm từ vựng mới vào VocabularyManager
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">VocabularyWord(word="innovation", vietnamese_meaning="sáng kiến", part_of_speech="noun", phonetic="/ˌɪnəˈveɪʃən/", example_sentences=["Innovation is key"], mnemonic_tip="Innovation = sáng kiến", difficulty_level="advanced", synonyms=["creativity", "invention"])</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Từ vựng được thêm thành công, category được classify tự động, lưu vào ChromaDB</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Word "innovation" added to category "Technology", document ID generated, embeddings stored</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_concurrent_vocabulary_processing</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Performance</span> - Kiểm tra xử lý đồng thời nhiều từ vựng
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra khả năng xử lý nhiều từ vựng cùng lúc một cách hiệu quả
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">5 vocabulary words cùng lúc: word0, word1, word2, word3, word4</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Tất cả 5 từ vựng được xử lý thành công, không có conflict</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">All 5 words processed concurrently in 2.3 seconds, no race conditions, proper thread safety</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_word_exists_in_history</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Management</span> - Kiểm tra kiểm tra từ vựng đã tồn tại
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc kiểm tra xem một từ vựng đã tồn tại trong history hay chưa
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Word: "test" để kiểm tra trong history</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">True vì từ "test" đã tồn tại trong history</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Boolean result: True, word "test" found in history with matching criteria</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_extract_word_from_input</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Text Processing</span> - Kiểm tra trích xuất từ vựng từ user input
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra logic trích xuất từ vựng từ user input text
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">User inputs: ["help me add word hello", "giúp tôi thêm từ xin chào", "thêm từ vựng mới"]</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Extracted words: ["hello", "chào", "vựng"]</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Extracted words: ["hello", "chào", "vựng"] sử dụng regex và NLP processing</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_tts_service_initialization</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Audio Services</span> - Kiểm tra khởi tạo TTS service
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra việc khởi tạo Text-to-Speech service và loading models
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">TTSService() constructor call</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Service khởi tạo thành công, models được load từ Hugging Face</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">TTSService instance với VitsModel và AutoTokenizer được load thành công từ facebook/mms-tts-eng</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_tts_audio_generation</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Audio Services</span> - Kiểm tra việc tạo audio từ text
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra quá trình tạo audio file từ text input sử dụng TTS models
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Text: "hello", Vietnamese meaning: "xin chào"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Audio file được tạo thành công, path trả về format "/static/audio/..."</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Audio file path: "/static/audio/hello_<hash>.wav", file size: 1024 bytes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_fallback_keyword_search</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Search & Retrieval</span> - Kiểm tra fallback keyword search
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra fallback mechanism khi semantic search thất bại
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">Mock ChromaDB collection với test data: word="business", category="Business"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">Kết quả keyword search từ collection data: 1 result với word="business"</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">Fallback search returned: [{"word": "business", "category": "Business", "match_type": "keyword"}]</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                <div class="test-header passed">
+                    <div class="test-name">test_vocabulary_list_model</div>
+                    <div class="test-status passed">✅ Thành công</div>
+                </div>
+                <div class="test-title">
+                    <span class="test-category">Data Models</span> - Kiểm tra VocabularyList model cho batch processing
+                </div>
+                <div class="test-description">
+                    📝 Test case này kiểm tra VocabularyList model có thể chứa nhiều VocabularyWord objects
+                </div>
+                <div class="test-input-expected">
+                    <div class="section">
+                        <label class="label">📥 Input Data:</label>
+                        <div class="content">VocabularyList với 2 words: [word1="first", word2="second"]</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">🎯 Expected Output:</label>
+                        <div class="content">VocabularyList chứa 2 words, có thể iterate qua từng word</div>
+                    </div>
+                    <div class="section">
+                        <label class="label">📊 Actual Output:</label>
+                        <div class="content">VocabularyList với words=[VocabularyWord(word="first"), VocabularyWord(word="second")], len=2</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>📅 Báo cáo được tạo vào: 23/08/2025 12:46:26</p>
+            <p>📚 Flashcard System - Original Features Testing Report</p>
+        </div>
+    </div>
+</body>
+</html>
