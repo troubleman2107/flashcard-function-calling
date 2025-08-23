@@ -154,8 +154,22 @@ class TTSService:
             return None
 
 
-# Initialize TTS service
-tts_service = TTSService()
+# Initialize TTS service lazily to avoid startup delays in deployment
+tts_service = None
+
+
+def get_tts_service():
+    """Get TTS service instance, creating it if needed"""
+    global tts_service
+    if tts_service is None:
+        try:
+            print("Initializing TTS service...")
+            tts_service = TTSService()
+            print("TTS service initialized successfully")
+        except Exception as e:
+            print(f"Warning: TTS service initialization failed: {e}")
+            tts_service = False  # Mark as failed to avoid retrying
+    return tts_service if tts_service is not False else None
 
 
 # Vocabulary Management with ChromaDB (enhanced with LangChain)
@@ -569,7 +583,7 @@ def semantic_search_vocabulary_tool(
 
         return {
             "success": True,
-            "message": f"Tìm thấy {len(results)} từ vựng liên quan đến '{query}'",
+            "message": f"Đã tìm thấy {len(results)} từ vựng liên quan đến '{query}'",
             "query": query,
             "results": formatted_results,
             "count": len(results),
@@ -693,27 +707,27 @@ def create_intelligent_vocabulary_agent():
     1. **Tìm kiếm từ vựng theo chủ đề**: Khi người dùng hỏi về từ vựng liên quan đến chủ đề nào đó
        (ví dụ: "từ vựng về du lịch", "các từ liên quan đến công nghệ", "words about emotions")
        → Sử dụng tool: semantic_search_vocabulary_tool
+       → Chỉ nói ngắn gọn: "Đã tìm thấy X từ vựng về chủ đề Y" và để hệ thống hiển thị flashcard
 
     2. **Thêm từ đơn lẻ**: Khi người dùng muốn thêm một từ cụ thể vào flashcard
        (ví dụ: "thêm từ happy", "add word computer", "giúp tôi thêm từ beautiful")
        → Sử dụng tool: add_single_vocabulary_tool
+       → Chỉ nói ngắn gọn: "Đã thêm từ X vào flashcard" và để hệ thống hiển thị flashcard
 
     3. **Phân tích văn bản**: Khi người dùng cung cấp một đoạn văn bản và muốn trích xuất từ vựng
-       (ví dụ: "phân tích đoạn văn này", "extract vocabulary from this text")
        → Sử dụng tool: analyze_text_vocabulary_tool
+       → Chỉ nói ngắn gọn về kết quả và để hệ thống hiển thị flashcard
 
     4. **Thống kê từ vựng**: Khi người dùng hỏi về số lượng từ, categories, thống kê
-       (ví dụ: "có bao nhiêu từ", "thống kê từ vựng", "vocabulary statistics")
        → Sử dụng tool: get_vocabulary_stats_tool
 
     5. **Trò chuyện thông thường**: Khi người dùng chào hỏi, hỏi về cách sử dụng, hoặc các câu hỏi chung
        → Trả lời trực tiếp, thân thiện và hữu ích
 
     QUAN TRỌNG:
-    - Phân tích ý định của người dùng một cách thông minh
-    - Luôn trả lời bằng tiếng Việt
-    - Khi sử dụng tools, hãy giải thích kết quả một cách dễ hiểu
-    - Nếu không chắc chắn về ý định, hãy hỏi lại người dùng
+    - Luôn trả lời bằng tiếng Việt và ngắn gọn
+    - Khi sử dụng tools để tìm/thêm từ vựng, KHÔNG viết danh sách chi tiết
+    - Chỉ nói kết quả tóm tắt và để giao diện hiển thị flashcard đẹp
     - Luôn thân thiện và khuyến khích người dùng học tập
     """
 
@@ -979,10 +993,12 @@ def save_to_history(word, result):
 
     if result.get("structured") and result["structured"].get("vietnamese_meaning"):
         vietnamese_meaning = result["structured"]["vietnamese_meaning"]
-        audio_path = tts_service.generate_audio(word, vietnamese_meaning)
-        if audio_path:
-            result["audio_path"] = audio_path
-            result["audio_text"] = f"{word}. {vietnamese_meaning}."
+        tts = get_tts_service()
+        if tts:
+            audio_path = tts.generate_audio(word, vietnamese_meaning)
+            if audio_path:
+                result["audio_path"] = audio_path
+                result["audio_text"] = f"{word}. {vietnamese_meaning}."
 
         if not chromadb_exists:
             try:
@@ -1234,6 +1250,12 @@ def index():
     return render_template("index.html", result=result, word=word, history=history)
 
 
+@app.route("/health")
+def health_check():
+    """Health check endpoint for deployment platforms"""
+    return {"status": "healthy", "message": "Flashcard app is running"}, 200
+
+
 @app.route("/chat")
 def chat():
     """Chat page"""
@@ -1257,23 +1279,30 @@ def chat_api():
         # Extract the response content
         if isinstance(response, dict):
             agent_response = response.get("output", str(response))
+            intermediate_steps = response.get("intermediate_steps", [])
         else:
             agent_response = str(response)
+            intermediate_steps = []
 
-        # Check if the agent used any tools by looking for specific patterns in the response
-        used_tools = []
-        tool_results = {}
+        # Parse tool results from intermediate steps
+        tool_results = extract_tool_results_from_agent_steps(
+            intermediate_steps, message
+        )
 
-        # Try to extract structured data from tool usage
-        # This is a simplified approach - in practice, you might want to modify the agent to return more structured data
+        # Check if this looks like a vocabulary search result and enhance the display
+        enhanced_response = enhance_vocabulary_response(agent_response, tool_results)
 
         return jsonify(
             {
                 "success": True,
-                "message": agent_response,
+                "message": enhanced_response["message"],
                 "type": "intelligent_chat",
-                "used_tools": used_tools,
-                "tool_results": tool_results,
+                "tool_results": enhanced_response["tool_results"],
+                "vocabulary_cards": enhanced_response.get("vocabulary_cards", []),
+                "has_structured_data": len(
+                    enhanced_response.get("vocabulary_cards", [])
+                )
+                > 0,
                 "timestamp": time.time(),
             }
         )
@@ -1287,6 +1316,129 @@ def chat_api():
                 "error_type": "agent_error",
             }
         )
+
+
+def extract_tool_results_from_agent_steps(intermediate_steps, original_message):
+    """Extract structured results from agent's tool usage"""
+    tool_results = {
+        "vocabulary_results": [],
+        "search_results": [],
+        "stats": {},
+        "added_words": [],
+    }
+
+    for step in intermediate_steps:
+        if len(step) >= 2:
+            action, observation = step[0], step[1]
+
+            if hasattr(action, "tool") and hasattr(action, "tool_input"):
+                tool_name = action.tool
+                tool_input = action.tool_input
+
+                # Handle different tool results
+                if tool_name == "semantic_search_vocabulary_tool" and observation:
+                    try:
+                        if isinstance(observation, dict) and observation.get("success"):
+                            tool_results["search_results"].extend(
+                                observation.get("results", [])
+                            )
+                    except Exception as e:
+                        print(f"Error parsing search results: {e}")
+
+                elif tool_name == "add_single_vocabulary_tool" and observation:
+                    try:
+                        if isinstance(observation, dict) and observation.get("success"):
+                            if observation.get("structured_data"):
+                                tool_results["vocabulary_results"].append(
+                                    {
+                                        "structured": observation["structured_data"],
+                                        "word": observation.get("word", ""),
+                                        "formatted": observation.get(
+                                            "formatted_result", ""
+                                        ),
+                                    }
+                                )
+                            tool_results["added_words"].append(
+                                observation.get("word", "")
+                            )
+                    except Exception as e:
+                        print(f"Error parsing add word results: {e}")
+
+                elif tool_name == "analyze_text_vocabulary_tool" and observation:
+                    try:
+                        if isinstance(observation, dict) and observation.get("success"):
+                            tool_results["vocabulary_results"].extend(
+                                observation.get("results", [])
+                            )
+                            tool_results["added_words"].extend(
+                                observation.get("added_words", [])
+                            )
+                    except Exception as e:
+                        print(f"Error parsing text analysis results: {e}")
+
+                elif tool_name == "get_vocabulary_stats_tool" and observation:
+                    try:
+                        if isinstance(observation, dict) and observation.get("success"):
+                            tool_results["stats"] = {
+                                "total_words": observation.get("total_words", 0),
+                                "categories": observation.get("categories", {}),
+                                "total_categories": observation.get(
+                                    "total_categories", 0
+                                ),
+                            }
+                    except Exception as e:
+                        print(f"Error parsing stats results: {e}")
+
+    return tool_results
+
+
+def enhance_vocabulary_response(agent_response, tool_results):
+    """Enhance the response with structured vocabulary data for beautiful display"""
+    vocabulary_cards = []
+    enhanced_message = agent_response
+
+    # If we have search results, create vocabulary cards
+    if tool_results.get("search_results"):
+        vocabulary_cards = []
+        for result in tool_results["search_results"]:
+            card_data = {
+                "word": result.get("word", ""),
+                "vietnamese_meaning": result.get("vietnamese_meaning", ""),
+                "part_of_speech": result.get("part_of_speech", ""),
+                "phonetic": result.get("phonetic", ""),
+                "example_sentences": result.get("example_sentences", []),
+                "mnemonic_tip": result.get("mnemonic_tip", ""),
+                "difficulty_level": result.get("difficulty_level", "intermediate"),
+                "synonyms": result.get("synonyms", []),
+                "category": result.get("category", "General"),
+                "similarity_score": result.get("similarity_score", 0),
+                "audio_path": None,  # Will be generated on demand
+            }
+            vocabulary_cards.append(card_data)
+
+        # Create a clean header message for search results
+        if len(vocabulary_cards) > 0:
+            enhanced_message = f"🎯 Tìm thấy {len(vocabulary_cards)} từ vựng phù hợp! Dưới đây là các flashcard chi tiết:"
+
+    # If we have added words, create vocabulary cards
+    elif tool_results.get("vocabulary_results"):
+        for result in tool_results["vocabulary_results"]:
+            if result.get("structured"):
+                card_data = result["structured"].copy()
+                card_data["audio_path"] = None  # Will be generated on demand
+                vocabulary_cards.append(card_data)
+
+        if len(vocabulary_cards) > 0:
+            words_list = ", ".join([card["word"] for card in vocabulary_cards])
+            enhanced_message = (
+                f"✅ Đã thêm {len(vocabulary_cards)} từ vào flashcard: {words_list}"
+            )
+
+    return {
+        "message": enhanced_message,
+        "tool_results": tool_results,
+        "vocabulary_cards": vocabulary_cards,
+    }
 
 
 @app.route("/api/chat-legacy", methods=["POST"])
@@ -1786,10 +1938,12 @@ def generate_audio_api(word):
                     "vietnamese_meaning"
                 ):
                     vietnamese_meaning = result["structured"]["vietnamese_meaning"]
-                    audio_path = tts_service.generate_audio(word, vietnamese_meaning)
-                    if audio_path:
-                        result["audio_path"] = audio_path
-                        result["audio_text"] = f"{word}. {vietnamese_meaning}."
+                    tts = get_tts_service()
+                    if tts:
+                        audio_path = tts.generate_audio(word, vietnamese_meaning)
+                        if audio_path:
+                            result["audio_path"] = audio_path
+                            result["audio_text"] = f"{word}. {vietnamese_meaning}."
 
                         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                             json.dump(history, f, ensure_ascii=False, indent=2)
@@ -1938,7 +2092,9 @@ def faq_api():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Get port from environment variable (for deployment) or use 5000 as default
+    port = int(os.environ.get("PORT", 5000))
+    print(f"Starting Flask app on host 0.0.0.0:{port}")
 
-if __name__ == "__main__":
-    app.run(debug=True, port=6969)
+    # Run with host 0.0.0.0 to allow external connections
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)

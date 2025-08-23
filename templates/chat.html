@@ -13,6 +13,9 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
 
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.2/marked.min.js"></script>
+
     <style>
       body {
         background-color: #f4f6f8;
@@ -134,6 +137,83 @@
         background: #f1f3f5;
         color: #333;
         border: 1px solid #e9ecef;
+      }
+
+      /* Markdown styling within message bubbles */
+      .message-bubble h1,
+      .message-bubble h2,
+      .message-bubble h3,
+      .message-bubble h4,
+      .message-bubble h5,
+      .message-bubble h6 {
+        margin: 0.5rem 0;
+        color: inherit;
+      }
+
+      .message-bubble p {
+        margin: 0.5rem 0;
+        line-height: 1.5;
+      }
+
+      .message-bubble strong,
+      .message-bubble b {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .message-bubble em,
+      .message-bubble i {
+        font-style: italic;
+        color: #34495e;
+      }
+
+      .message-bubble code {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 0.9em;
+      }
+
+      .message-bubble pre {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        overflow-x: auto;
+      }
+
+      .message-bubble pre code {
+        background: none;
+        padding: 0;
+      }
+
+      .message-bubble ul,
+      .message-bubble ol {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+      }
+
+      .message-bubble li {
+        margin: 0.25rem 0;
+        line-height: 1.4;
+      }
+
+      .message-bubble blockquote {
+        border-left: 3px solid #667eea;
+        padding: 0.5rem 1rem;
+        margin: 0.5rem 0;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 0 8px 8px 0;
+      }
+
+      .message-bubble a {
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .message-bubble a:hover {
+        text-decoration: underline;
       }
 
       .message-avatar {
@@ -440,6 +520,271 @@
         font-size: 0.9rem;
       }
 
+      /* Beautiful Vocabulary Card Styles */
+      .beautiful-vocab-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+        margin: 1rem 0;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .beautiful-vocab-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: #667eea;
+      }
+
+      .beautiful-vocab-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #667eea 100%
+        );
+      }
+
+      .vocab-card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .word-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .word-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #667eea;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        letter-spacing: 1px;
+      }
+
+      .audio-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+      }
+
+      .audio-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .audio-btn:active {
+        transform: scale(0.95);
+      }
+
+      .audio-btn .spinning {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .card-meta {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .meta-tag {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .pos-tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .category-tag {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+      }
+
+      .similarity-tag {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+      }
+
+      .vocab-card-body {
+        padding: 1.5rem;
+      }
+
+      .vocab-card-body > div:not(:last-child) {
+        margin-bottom: 1.5rem;
+      }
+
+      .meaning-section,
+      .examples-section,
+      .synonyms-section,
+      .mnemonic-section {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .section-icon {
+        font-size: 1.5rem;
+        min-width: 2rem;
+        text-align: center;
+      }
+
+      .section-content {
+        flex: 1;
+      }
+
+      .section-title {
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .meaning-text {
+        background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+        padding: 1rem;
+        border-radius: 12px;
+        color: #495057;
+        font-weight: 500;
+        border-left: 4px solid #17a2b8;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .examples-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        border-left: 4px solid #28a745;
+      }
+
+      .example-item {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        align-items: flex-start;
+      }
+
+      .example-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .example-number {
+        background: #28a745;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .example-text {
+        color: #495057;
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .synonyms-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .synonym-badge {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(111, 66, 193, 0.3);
+        transition: transform 0.2s ease;
+      }
+
+      .synonym-badge:hover {
+        transform: translateY(-1px);
+      }
+
+      .mnemonic-text {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 1rem;
+        color: #856404;
+        font-style: italic;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        position: relative;
+      }
+
+      .mnemonic-text::before {
+        content: '"';
+        font-size: 2rem;
+        color: #ffc107;
+        position: absolute;
+        top: -0.5rem;
+        left: 0.5rem;
+        font-family: serif;
+      }
+
+      .mnemonic-text::after {
+        content: '"';
+        font-size: 2rem;
+        color: #ffc107;
+        position: absolute;
+        bottom: -1rem;
+        right: 0.5rem;
+        font-family: serif;
+      }
+
       @media (max-width: 768px) {
         .mode-selector {
           padding: 0.75rem;
@@ -669,7 +1014,178 @@
         return html;
       }
 
-      function addMessage(sender, content, isHtml = false) {
+      function createBeautifulVocabularyCard(data, cardIndex = 0) {
+        const cardId = `vocab-card-${Date.now()}-${cardIndex}`;
+
+        let html = `<div class="beautiful-vocab-card" id="${cardId}">`;
+
+        // Card Header with Word and Audio
+        html += '<div class="vocab-card-header">';
+        html += `<div class="word-display">
+          <h3 class="word-title">${data.word.toUpperCase()}</h3>
+          <button class="audio-btn" onclick="playWordAudio('${
+            data.word
+          }', '${cardId}')" title="Nghe phát âm">
+            <i class="bi bi-volume-up"></i>
+          </button>
+        </div>`;
+
+        if (data.phonetic) {
+          html += `<div class="phonetic">/${data.phonetic}/</div>`;
+        }
+
+        // Meta information
+        html += '<div class="card-meta">';
+        if (data.part_of_speech) {
+          html += `<span class="meta-tag pos-tag">${data.part_of_speech}</span>`;
+        }
+        if (data.category) {
+          html += `<span class="meta-tag category-tag">${data.category}</span>`;
+        }
+        if (data.difficulty_level) {
+          const difficultyEmoji = {
+            beginner: "🟢",
+            intermediate: "🟡",
+            advanced: "🔴",
+          };
+          html += `<span class="meta-tag difficulty-tag difficulty-${
+            data.difficulty_level
+          }">
+            ${difficultyEmoji[data.difficulty_level] || "⚪"} ${
+            data.difficulty_level
+          }
+          </span>`;
+        }
+        if (data.similarity_score > 0) {
+          const percentage = Math.round(data.similarity_score * 100);
+          html += `<span class="meta-tag similarity-tag" title="Độ phù hợp: ${percentage}%">
+            🎯 ${percentage}%
+          </span>`;
+        }
+        html += "</div></div>"; // Close header
+
+        // Card Body
+        html += '<div class="vocab-card-body">';
+
+        // Vietnamese Meaning
+        if (data.vietnamese_meaning) {
+          html += `<div class="meaning-section">
+            <div class="section-icon">🇻🇳</div>
+            <div class="section-content">
+              <div class="section-title">Nghĩa tiếng Việt</div>
+              <div class="meaning-text">${data.vietnamese_meaning}</div>
+            </div>
+          </div>`;
+        }
+
+        // Example Sentences
+        if (data.example_sentences && data.example_sentences.length > 0) {
+          html += `<div class="examples-section">
+            <div class="section-icon">📝</div>
+            <div class="section-content">
+              <div class="section-title">Câu ví dụ</div>
+              <div class="examples-container">`;
+
+          data.example_sentences.forEach((sentence, index) => {
+            html += `<div class="example-item">
+              <span class="example-number">${index + 1}</span>
+              <span class="example-text">${sentence}</span>
+            </div>`;
+          });
+
+          html += "</div></div></div>";
+        }
+
+        // Synonyms
+        if (data.synonyms && data.synonyms.length > 0) {
+          html += `<div class="synonyms-section">
+            <div class="section-icon">🔄</div>
+            <div class="section-content">
+              <div class="section-title">Từ đồng nghĩa</div>
+              <div class="synonyms-container">`;
+
+          data.synonyms.forEach((synonym) => {
+            html += `<span class="synonym-badge">${synonym}</span>`;
+          });
+
+          html += "</div></div></div>";
+        }
+
+        // Mnemonic Tip
+        if (data.mnemonic_tip) {
+          html += `<div class="mnemonic-section">
+            <div class="section-icon">💡</div>
+            <div class="section-content">
+              <div class="section-title">Mẹo ghi nhớ</div>
+              <div class="mnemonic-text">${data.mnemonic_tip}</div>
+            </div>
+          </div>`;
+        }
+
+        html += "</div></div>"; // Close body and card
+
+        return html;
+      }
+
+      // Audio playback function
+      async function playWordAudio(word, cardId) {
+        const audioBtn = document.querySelector(`#${cardId} .audio-btn`);
+        const originalContent = audioBtn.innerHTML;
+
+        try {
+          audioBtn.innerHTML = '<i class="bi bi-hourglass-split spinning"></i>';
+          audioBtn.disabled = true;
+
+          // Try to get existing audio or generate new one
+          const response = await fetch(
+            `/api/generate-audio/${encodeURIComponent(word)}`
+          );
+          const data = await response.json();
+
+          if (data.success && data.audio_path) {
+            const audio = new Audio(data.audio_path);
+
+            audio.onloadstart = () => {
+              audioBtn.innerHTML =
+                '<i class="bi bi-hourglass-split spinning"></i>';
+            };
+
+            audio.oncanplay = () => {
+              audioBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            };
+
+            audio.onplay = () => {
+              audioBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+            };
+
+            audio.onended = () => {
+              audioBtn.innerHTML = originalContent;
+              audioBtn.disabled = false;
+            };
+
+            audio.onerror = () => {
+              audioBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+              setTimeout(() => {
+                audioBtn.innerHTML = originalContent;
+                audioBtn.disabled = false;
+              }, 2000);
+            };
+
+            await audio.play();
+          } else {
+            throw new Error(data.message || "Cannot generate audio");
+          }
+        } catch (error) {
+          console.error("Audio playback error:", error);
+          audioBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+          setTimeout(() => {
+            audioBtn.innerHTML = originalContent;
+            audioBtn.disabled = false;
+          }, 2000);
+        }
+      }
+
+      function addMessage(sender, content, isHtml = false, isMarkdown = false) {
         const messagesContainer = document.getElementById("chat-messages");
         const messageDiv = document.createElement("div");
         messageDiv.className = `message ${sender}`;
@@ -686,6 +1202,9 @@
 
         if (isHtml) {
           bubble.innerHTML = content;
+        } else if (isMarkdown) {
+          // Parse markdown and render as HTML
+          bubble.innerHTML = marked.parse(content);
         } else {
           bubble.textContent = content;
         }
@@ -720,6 +1239,7 @@
 
         // Update mode indicator
         const modeNames = {
+          smart: "Thông minh",
           chat: "Trò chuyện",
           word: "Thêm từ",
           analyze: "Phân tích văn bản",
@@ -742,7 +1262,12 @@
         document.getElementById("chat-input").focus();
 
         // Add mode switch message
-        addMessage("bot", `🔄 Đã chuyển sang chế độ: ${modeNames[mode]}`);
+        addMessage(
+          "bot",
+          `🔄 **Đã chuyển sang chế độ:** ${modeNames[mode]}`,
+          false,
+          true
+        );
       }
 
       function sendMessage() {
@@ -750,7 +1275,12 @@
         const message = input.value.trim();
 
         if (!message) {
-          addMessage("bot", "❌ Vui lòng nhập nội dung trước khi gửi!");
+          addMessage(
+            "bot",
+            "❌ **Vui lòng nhập nội dung trước khi gửi!**",
+            false,
+            true
+          );
           input.focus();
           return;
         }
@@ -801,48 +1331,86 @@
           hideTyping();
 
           if (data.success) {
-            // Add the agent's response
-            addMessage("bot", data.message);
+            // Display vocabulary cards if available (priority display)
+            if (data.vocabulary_cards && data.vocabulary_cards.length > 0) {
+              // Show brief intro message instead of agent's verbose response
+              addMessage(
+                "bot",
+                `🔍 Tìm thấy ${data.vocabulary_cards.length} từ vựng phù hợp:`
+              );
 
-            // Check if there are any tool results to display
-            if (data.tool_results) {
               setTimeout(() => {
-                // Handle different types of tool results
-                if (data.tool_results.vocabulary_results) {
-                  data.tool_results.vocabulary_results.forEach((vocab) => {
-                    if (vocab.structured) {
-                      const resultHtml = createVocabularyHtml(vocab.structured);
+                data.vocabulary_cards.forEach((cardData, index) => {
+                  const cardHtml = createBeautifulVocabularyCard(
+                    cardData,
+                    index
+                  );
+                  addMessage("bot", cardHtml, true);
+                });
+
+                // Add a helpful follow-up message
+                setTimeout(() => {
+                  addMessage(
+                    "bot",
+                    "💡 **Mẹo:** Nhấn vào biểu tượng 🔊 để nghe phát âm. Bạn có câu hỏi gì khác không?",
+                    false,
+                    true
+                  );
+                }, 500);
+              }, 300);
+            }
+            // Only show agent response if no vocabulary cards are available
+            else {
+              addMessage("bot", data.message, false, true); // Enable markdown rendering
+
+              // Handle legacy tool results (fallback)
+              if (data.tool_results) {
+                setTimeout(() => {
+                  if (data.tool_results.vocabulary_results) {
+                    data.tool_results.vocabulary_results.forEach((vocab) => {
+                      if (vocab.structured) {
+                        const resultHtml = createVocabularyHtml(
+                          vocab.structured
+                        );
+                        addMessage(
+                          "bot",
+                          `<div class="vocabulary-result">${resultHtml}</div>`,
+                          true
+                        );
+                      }
+                    });
+                  }
+
+                  if (data.tool_results.search_results) {
+                    data.tool_results.search_results.forEach((vocab) => {
+                      const resultHtml = createVocabularyHtml(vocab);
                       addMessage(
                         "bot",
                         `<div class="vocabulary-result">${resultHtml}</div>`,
                         true
                       );
-                    }
-                  });
-                }
-
-                if (data.tool_results.search_results) {
-                  data.tool_results.search_results.forEach((vocab) => {
-                    const resultHtml = createVocabularyHtml(vocab);
-                    addMessage(
-                      "bot",
-                      `<div class="vocabulary-result">${resultHtml}</div>`,
-                      true
-                    );
-                  });
-                }
-              }, 300);
+                    });
+                  }
+                }, 300);
+              }
             }
           } else {
             addMessage(
               "bot",
-              data.message || "❌ Đã xảy ra lỗi. Vui lòng thử lại!"
+              data.message || "❌ **Đã xảy ra lỗi.** Vui lòng thử lại!",
+              false,
+              true
             );
           }
         } catch (error) {
           hideTyping();
           console.error("Smart API Error:", error);
-          addMessage("bot", "❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!");
+          addMessage(
+            "bot",
+            "❌ **Đã xảy ra lỗi kết nối.** Vui lòng thử lại!",
+            false,
+            true
+          );
         }
       }
 
@@ -870,7 +1438,7 @@
               data.structured_results.length > 0
             ) {
               // Display a clean header message
-              addMessage("bot", data.message);
+              addMessage("bot", data.message, false, true);
 
               // Then display each result as a structured vocabulary card
               setTimeout(() => {
@@ -887,14 +1455,19 @@
               }, 300);
             } else {
               // Regular chat response
-              addMessage("bot", data.message);
+              addMessage("bot", data.message, false, true);
             }
           } else {
-            addMessage("bot", data.message);
+            addMessage("bot", data.message, false, true);
           }
         } catch (error) {
           hideTyping();
-          addMessage("bot", "❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!");
+          addMessage(
+            "bot",
+            "❌ **Đã xảy ra lỗi kết nối.** Vui lòng thử lại!",
+            false,
+            true
+          );
         }
       }
 
@@ -919,11 +1492,13 @@
             if (data.extracted_word && data.extracted_word !== message.trim()) {
               addMessage(
                 "bot",
-                `🔍 Tôi đã hiểu bạn muốn thêm từ: <strong>${data.extracted_word}</strong>`
+                `🔍 Tôi đã hiểu bạn muốn thêm từ: **${data.extracted_word}**`,
+                false,
+                true
               );
             }
 
-            addMessage("bot", data.message);
+            addMessage("bot", data.message, false, true);
 
             if (data.result) {
               if (data.structured_data) {
@@ -943,15 +1518,22 @@
             setTimeout(() => {
               addMessage(
                 "bot",
-                "✨ Từ vựng đã được lưu! Bạn có muốn thêm từ khác không?"
+                "✨ **Từ vựng đã được lưu!** Bạn có muốn thêm từ khác không?",
+                false,
+                true
               );
             }, 1000);
           } else {
-            addMessage("bot", data.message);
+            addMessage("bot", data.message, false, true);
           }
         } catch (error) {
           hideTyping();
-          addMessage("bot", "❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!");
+          addMessage(
+            "bot",
+            "❌ **Đã xảy ra lỗi kết nối.** Vui lòng thử lại!",
+            false,
+            true
+          );
         }
       }
 
@@ -972,7 +1554,7 @@
           hideTyping();
 
           if (data.success) {
-            addMessage("bot", data.message);
+            addMessage("bot", data.message, false, true);
 
             if (data.results) {
               let listHtml = '<div class="vocabulary-list">';
@@ -1003,15 +1585,22 @@
             setTimeout(() => {
               addMessage(
                 "bot",
-                "✨ Đã trích xuất và lưu từ vựng từ văn bản! Bạn có muốn phân tích văn bản khác không?"
+                "✨ **Đã trích xuất và lưu từ vựng từ văn bản!** Bạn có muốn phân tích văn bản khác không?",
+                false,
+                true
               );
             }, 1000);
           } else {
-            addMessage("bot", data.message);
+            addMessage("bot", data.message, false, true);
           }
         } catch (error) {
           hideTyping();
-          addMessage("bot", "❌ Đã xảy ra lỗi kết nối. Vui lòng thử lại!");
+          addMessage(
+            "bot",
+            "❌ **Đã xảy ra lỗi kết nối.** Vui lòng thử lại!",
+            false,
+            true
+          );
         }
       }
 

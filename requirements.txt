@@ -1,12 +1,31 @@
-Flask==3.0.0
+# Essential packages for Flashcard System
+
+# Core Web Framework
+Flask==3.0.3
+
+# AI/ML Libraries  
 transformers==4.36.2
-openai>=1.10.0
 torch>=2.6.0
+openai>=1.10.0
+
+# Audio Processing
 soundfile==0.12.1
+
+# Environment & Configuration
 python-dotenv==1.0.0
+
+# Vector Database
 chromadb==0.4.22
+
+# LangChain Framework
+langchain>=0.1.0
 langchain-openai>=0.0.5
 langchain-core>=0.1.21
-langchain>=0.1.0
 langchain-community>=0.0.20
+
+# Data Validation
 pydantic>=2.5.3
+
+# Additional dependencies
+numpy>=2.0.0
+requests>=2.31.0
