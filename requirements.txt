@@ -1,35 +1,31 @@
+# Essential packages only - let pip resolve optimal versions
+
 # Core Web Framework
 Flask==3.0.3
-Werkzeug==3.0.3
 
 # AI/ML Libraries  
-transformers==4.44.0
-torch==2.4.0
-torchaudio==2.4.0
-openai==1.40.0
+transformers
+torch
+openai
 
 # Audio Processing
-soundfile==0.12.1
+soundfile
 
 # Environment & Configuration
-python-dotenv==1.0.1
+python-dotenv
 
 # Vector Database
-chromadb==0.5.5
+chromadb
 
 # LangChain Framework
-langchain==0.2.14
-langchain-openai==0.1.22
-langchain-core==0.2.32
-langchain-community==0.2.12
+langchain
+langchain-openai
+langchain-core
+langchain-community
 
 # Data Validation
-pydantic==2.8.2
+pydantic
 
-# Additional dependencies for stability
-numpy==1.26.4
-requests==2.32.3
-typing-extensions==4.12.2
-
-# Built-in Python modules (no installation required)
-# json, os, re, time, hashlib, typing
+# Additional dependencies
+numpy
+requests
